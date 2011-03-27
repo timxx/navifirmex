@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NaviFirmEx", "NaviFirmEx.vcxproj", "{CA63B3FD-DC8B-4C4A-9BE7-99D1AACD8D2C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Unicode_DLL_Debug|Win32 = Unicode_DLL_Debug|Win32
+		Unicode_DLL_Release|Win32 = Unicode_DLL_Release|Win32
+		Unicode_LIB_Debug|Win32 = Unicode_LIB_Debug|Win32
+		Unicode_LIB_Release|Win32 = Unicode_LIB_Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CA63B3FD-DC8B-4C4A-9BE7-99D1AACD8D2C}.Unicode_DLL_Debug|Win32.ActiveCfg = Unicode_DLL_Debug|Win32
+		{CA63B3FD-DC8B-4C4A-9BE7-99D1AACD8D2C}.Unicode_DLL_Debug|Win32.Build.0 = Unicode_DLL_Debug|Win32
+		{CA63B3FD-DC8B-4C4A-9BE7-99D1AACD8D2C}.Unicode_DLL_Release|Win32.ActiveCfg = Unicode_DLL_Release|Win32
+		{CA63B3FD-DC8B-4C4A-9BE7-99D1AACD8D2C}.Unicode_DLL_Release|Win32.Build.0 = Unicode_DLL_Release|Win32
+		{CA63B3FD-DC8B-4C4A-9BE7-99D1AACD8D2C}.Unicode_LIB_Debug|Win32.ActiveCfg = Unicode_Debug|Win32
+		{CA63B3FD-DC8B-4C4A-9BE7-99D1AACD8D2C}.Unicode_LIB_Debug|Win32.Build.0 = Unicode_Debug|Win32
+		{CA63B3FD-DC8B-4C4A-9BE7-99D1AACD8D2C}.Unicode_LIB_Release|Win32.ActiveCfg = Unicode_Release|Win32
+		{CA63B3FD-DC8B-4C4A-9BE7-99D1AACD8D2C}.Unicode_LIB_Release|Win32.Build.0 = Unicode_Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

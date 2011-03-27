@@ -1,0 +1,241 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Tim">
+      <UniqueIdentifier>{f71eb87c-c036-4ddf-8449-c4dc5beaa66f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tim">
+      <UniqueIdentifier>{f4a2ce32-2bbe-4f91-80ac-d3ffad472580}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\TinyXml">
+      <UniqueIdentifier>{36610884-5149-4ef4-81e6-cda6492db96d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TinyXml">
+      <UniqueIdentifier>{f54c3e8d-f993-47da-b527-d5d54bdd8ad0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Zip">
+      <UniqueIdentifier>{2ae3abd8-5539-43ab-96ec-8860a074f0cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Zip">
+      <UniqueIdentifier>{bde926e4-8b48-42b6-8897-7af1316f1f5e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\WinMain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Tim\Dialog.cpp">
+      <Filter>Source Files\Tim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Tim\TString.cpp">
+      <Filter>Source Files\Tim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Tim\LinkCtrl.cpp">
+      <Filter>Source Files\Tim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GUIWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TinyXml\tinyxmlparser.cpp">
+      <Filter>Source Files\TinyXml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TinyXml\tinyxmlerror.cpp">
+      <Filter>Source Files\TinyXml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TinyXml\tinyxml.cpp">
+      <Filter>Source Files\TinyXml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ImageEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Zip\unzip.cpp">
+      <Filter>Source Files\Zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ProductList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DlgAbout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\VariantList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ProgressBarEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Zip\zip.cpp">
+      <Filter>Source Files\Zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TinyXml\tinystr.cpp">
+      <Filter>Source Files\TinyXml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DlgConfirm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Http.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TaskMgrWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\MiniDownloader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ProgressView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NveFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Tim\SException.cpp">
+      <Filter>Source Files\Tim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Tim\File.cpp">
+      <Filter>Source Files\Tim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DlgNew.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\Tim\ClassEx.h">
+      <Filter>Header Files\Tim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Tim\Window.h">
+      <Filter>Header Files\Tim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Tim\CommonCtrls.h">
+      <Filter>Header Files\Tim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Tim\Dialog.h">
+      <Filter>Header Files\Tim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Tim\LinkCtrl.h">
+      <Filter>Header Files\Tim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Tim\Rect.h">
+      <Filter>Header Files\Tim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Tim\tim.h">
+      <Filter>Header Files\Tim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Tim\TString.h">
+      <Filter>Header Files\Tim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\GUIWnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TinyXml\tinyxml.h">
+      <Filter>Header Files\TinyXml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ImageEx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\data_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Zip\unzip.h">
+      <Filter>Header Files\Zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ProductList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DlgAbout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\VariantList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ProgressBarEx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\res\resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Zip\zip.h">
+      <Filter>Header Files\Zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TinyXml\tinystr.h">
+      <Filter>Header Files\TinyXml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DlgConfirm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Http.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TaskMgrWnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MiniDownloader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\nm_message.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ProgressView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NveFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Tim\SException.h">
+      <Filter>Header Files\Tim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Tim\File.h">
+      <Filter>Header Files\Tim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DlgNew.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\res\NaviFirmEx.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\res\document-save-as-2.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\process.gif">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\me.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\blockdevice-2.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\arrow-down-double.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\dialog-cancel-2.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\mark.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\media-playback-pause-2.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>
