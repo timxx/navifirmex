@@ -78,7 +78,8 @@ DWORD WINAPI MiniDownloader::DownloadProc(LPVOID lParam)
 	fclose(pMD->_fp);
 	pMD->_fp = NULL;
 
-	::PostMessage(pMD->_hWnd, NM_DOWNFINISH, bSucceed, reinterpret_cast<LPARAM>(pMD));
+	//::PostMessage(pMD->_hWnd, NM_DOWNFINISH, bSucceed, reinterpret_cast<LPARAM>(pMD));
+	::SendMessage(pMD->_hWnd, NM_DOWNFINISH, bSucceed, reinterpret_cast<LPARAM>(pMD));
 
 	return 0;
 }
@@ -86,7 +87,9 @@ DWORD WINAPI MiniDownloader::DownloadProc(LPVOID lParam)
 int MiniDownloader::Progress(double dltotal, double dlnow, double ultotal, double ulnow)
 {
 	DownloadStatus status((long)dltotal, (long)dlnow + _offset, this);
-	::PostMessage(_hWnd, NM_DOWNPROGRESS, 0, reinterpret_cast<LPARAM>(&status));
+
+	//::PostMessage(_hWnd, NM_DOWNPROGRESS, 0, reinterpret_cast<LPARAM>(&status));
+	::SendMessage(_hWnd, NM_DOWNPROGRESS, 0, reinterpret_cast<LPARAM>(&status));
 
 	return 0;
 }
@@ -118,11 +121,13 @@ bool MiniDownloader::Resume()
 
 void MiniDownloader::Stop()
 {
-	if (_hThread)
+	if (_hThread != INVALID_HANDLE_VALUE)
 	{
 		TerminateThread(_hThread, 0);
 		CloseHandle(_hThread);
 
 		_hThread = INVALID_HANDLE_VALUE;
+
+		Close();
 	}
 }

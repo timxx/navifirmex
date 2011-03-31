@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DlgAbout.h"
 #include "res\resource.h"
+#include "common.h"
 
 static const TCHAR szGNUInfo[] = 
 {
@@ -40,56 +41,32 @@ BOOL DlgAbout::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg)
 	{
 	case WM_INITDIALOG:
-		{
-			TString buildTime(_T("Build time : "));
-#ifdef UNICODE
-			int len = atow(__DATE__, NULL);
-			wchar_t *wbuffer = new wchar_t[len];
-			atow(__DATE__, wbuffer, len);
-			buildTime += wbuffer;
-			buildTime += L" - ";
-
-			delete [] wbuffer;
-			len = atow(__TIME__, NULL);
-			wbuffer = new wchar_t[len];
-			atow(__TIME__, wbuffer, len);
-
-			buildTime += wbuffer;
-#else
-			buildTime += __DATE__;
-			buildTime += " - ";
-			buildTime += __TIME__;
-#endif
-			SetItemText(IDS_BUILT, buildTime);
-			DisableCtrl(IDS_BUILT);
-
-			buildTime = TEXT("诺基亚固件下载器 v1.3 ");
-#ifdef UNICODE
-			buildTime += TEXT("(UNICODE)");
-#else
-			buildTime += TEXT("(ANSI)");
-#endif
-			SetItemText(IDS_APP_VER, buildTime);
-
-			_qqLink.init(_hinst, _hWnd);
-			_qqLink.create(HwndFromId(IDS_QQ), TEXT("tencent://message/?uin=551907703"));
-			_emailLink.init(_hinst, _hWnd);
-			_emailLink.create(HwndFromId(IDS_EMAIL), TEXT("mailto:Just_Fancy@live.com"));
-
-			SetItemText(IDC_EDIT1, szGNUInfo);
-		}
+		OnInit();
 		return TRUE;
 		
-// 	case WM_PAINT:
-// 		{
-// 			PAINTSTRUCT ps;
-// 			HDC hdc = BeginPaint(_hWnd, &ps);
-// 			Rect rc;
-// 			GetClientRect(&rc);
-// 			FillRect(hdc, &rc, (HBRUSH)GetStockObject(WHITE_BRUSH));
-// 			EndPaint(_hWnd, &ps);
-// 		}
-// 		break;
+	case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			HDC hdc = BeginPaint(_hWnd, &ps);
+
+			HBITMAP hBitmap = GradienBitmap(_hWnd, RGB(189, 184, 237), RGB(192, 218, 206));
+
+			Rect rect;
+			GetClientRect(&rect);
+			DrawBitmap(hBitmap, hdc, rect);
+			DeleteObject(hBitmap);
+
+			EndPaint(_hWnd, &ps);
+		}
+		break;
+
+	case WM_CTLCOLORSTATIC:
+		if (HwndFromId(IDC_EDIT1) != HWND(lParam))
+			SetBkMode(HDC(wParam), TRANSPARENT);
+		if (HwndFromId(IDS_BUILT) == HWND(lParam))
+			SetTextColor(HDC(wParam), RGB(240, 240, 240));
+
+		return (BOOL)GetStockObject(NULL_BRUSH);
 
 	case WM_CLOSE:
 		destroy();
@@ -97,4 +74,43 @@ BOOL DlgAbout::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+void DlgAbout::OnInit()
+{
+	TString buildTime(_T("Build time : "));
+#ifdef UNICODE
+	int len = atow(__DATE__, NULL);
+	wchar_t *wbuffer = new wchar_t[len];
+	atow(__DATE__, wbuffer, len);
+	buildTime += wbuffer;
+	buildTime += L" - ";
+
+	delete [] wbuffer;
+	len = atow(__TIME__, NULL);
+	wbuffer = new wchar_t[len];
+	atow(__TIME__, wbuffer, len);
+
+	buildTime += wbuffer;
+#else
+	buildTime += __DATE__;
+	buildTime += " - ";
+	buildTime += __TIME__;
+#endif
+	SetItemText(IDS_BUILT, buildTime);
+
+	buildTime = TEXT("诺基亚固件下载器 v1.3 ");
+#ifdef UNICODE
+	buildTime += TEXT("(UNICODE)");
+#else
+	buildTime += TEXT("(ANSI)");
+#endif
+	SetItemText(IDS_APP_VER, buildTime);
+
+	_qqLink.init(_hinst, _hWnd);
+	_qqLink.create(HwndFromId(IDS_QQ), TEXT("tencent://message/?uin=551907703"));
+	_emailLink.init(_hinst, _hWnd);
+	_emailLink.create(HwndFromId(IDS_EMAIL), TEXT("mailto:Just_Fancy@live.com"));
+
+	SetItemText(IDC_EDIT1, szGNUInfo);
 }

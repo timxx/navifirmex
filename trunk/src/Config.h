@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #pragma once
 
 #ifndef _CONFIG_H_
@@ -56,16 +57,56 @@ public:
 		strcpy(_lastDir, lpDir);
 	}
 
+	void setDownPrompt(BOOL fPrompt){
+		_fDownloadPrompt = fPrompt;
+	}
+
+	void setDownAction(BOOL fYes){
+		_fDownAction = fYes;
+	}
+
+	void setExitPrompt(BOOL fPrompt){
+		_fExitPrompt = fPrompt;
+	}
+
+	void setExitAction(BOOL fYes){
+		_fExitAction = fYes;
+	}
+
 	void getLastDir(LPSTR lpDir) const{
 		strcpy(lpDir, _lastDir);
 	}
 	int getXPos()	const	{	return _pos.x;		}
 	int getYPos()	const	{	return _pos.y;		}
 	const Rect& getTaskRect() const	{	return _rcTask;	} 
-	int getIndex()	const	{	return _nIndex;		}
+	int getIndex()	const	{	return _nIndex;			}
 
+	void getColor(COLORREF &cr1, COLORREF &cr2){
+		cr1 = _cr1; cr2 = _cr2;
+	}
+
+	BOOL downloadWithPompt() const {
+		return _fDownloadPrompt;
+	}
+
+	BOOL downloadAction() const{
+		return _fDownAction;
+	}
+
+	BOOL exitWithPrompt() const {
+		return _fExitPrompt;
+	}
+
+	BOOL extiAction() const {
+		return _fExitAction;
+	}
 protected:
 	void makeDefault();
+
+	COLORREF makeColor(const char *color);
+	char *makeColor(COLORREF cr);
+
+	inline int HexToDec(char hex);
 private:
 	Point	_pos;
 	int		_nIndex;
@@ -74,5 +115,12 @@ private:
 	BOOL	_tgMaxed;
 	TiXmlDocument *_cfgDoc;
 	char _filePath[MAX_PATH];
+	//主窗口渐变颜色
+	COLORREF _cr1;
+	COLORREF _cr2;
+	BOOL	_fDownloadPrompt;	//运行时是否提示接着下载
+	BOOL	_fDownAction;		//TRUE - 点击确定
+	BOOL	_fExitPrompt;		//退出有任务时是否提醒
+	BOOL	_fExitAction;		//TRUE － 确定
 };
 #endif

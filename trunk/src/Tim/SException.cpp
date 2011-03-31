@@ -60,15 +60,15 @@ void SException::exceptioninfo(unsigned int code)
 	switch(code)
 	{
 	case EXCEPTION_ACCESS_VIOLATION:
-		_what = "访问违规异常";
+		_what = "访问违规";
 		break;
 
 	case EXCEPTION_STACK_OVERFLOW:
-		_what = "栈溢出异常";
+		_what = "栈溢出";
 		break;
 
 	case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
-		_what = "数组越界异常";
+		_what = "数组越界";
 		break;
 
 	case EXCEPTION_FLT_DIVIDE_BY_ZERO:
@@ -77,7 +77,6 @@ void SException::exceptioninfo(unsigned int code)
 		break;
 
 	default:
-		_what = "未处理异常";
+		_what = "未列举";
 	}
-
 }

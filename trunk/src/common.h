@@ -15,29 +15,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ABOUT_DLG_H
-#define ABOUT_DLG_H
+
 
 #pragma once
 
-#include "Tim/dialog.h"
-#include "Tim/LinkCtrl.h"
+#ifndef __COMMON_H__
+#define __COMMON_H__
 
-using namespace _TIM;
-
-class DlgAbout : public Dialog
-{
-public:
-	DlgAbout(){}
-	~DlgAbout(){}
-
-protected:
-	virtual BOOL CALLBACK runProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-	void OnInit();
-private:
-	LinkCtrl _qqLink;
-	LinkCtrl _emailLink;
-};
+HBITMAP GradienBitmap(HWND hWnd, COLORREF cr1, COLORREF cr2);
+void DrawBitmap(const HBITMAP &hBitmap, HDC hdc, const Rect &rect);
+bool CopyTextToClipbrd(LPCTSTR lpData);
 
 #endif

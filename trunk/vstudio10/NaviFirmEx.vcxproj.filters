@@ -111,6 +111,9 @@
     <ClCompile Include="..\src\DlgNew.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Tim\ClassEx.h">
@@ -206,6 +209,9 @@
     <ClInclude Include="..\src\DlgNew.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\res\NaviFirmEx.rc">
@@ -235,6 +241,15 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\src\res\media-playback-pause-2.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\dialog-cancel-2.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\media-playback-pause-2.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\media-playback-start-2.bmp">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

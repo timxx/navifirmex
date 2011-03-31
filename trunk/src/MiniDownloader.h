@@ -22,47 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define __MINI_DOWNLOADER_H__
 
 #include "http.h"
-
-//下载文件信息
-struct TiFile
-{
-	char	url[MAX_PATH];	//下载的地址
-	char	file[MAX_PATH];	//保存路径
-	long	offset;			//偏移，大于0时继续上次下载，为0时重新下载
-	long	size;			//总大小，不能大于这long取值范围
-
-	TiFile()
-		:offset(0), size(0)
-	{
-		RtlSecureZeroMemory(url, MAX_PATH);
-		RtlSecureZeroMemory(file, MAX_PATH);
-	}
-
-	void seturl(const std::string &u){
-		lstrcpyA(url, u.c_str());
-	}
-	void setfile(const std::string &f){
-		lstrcpyA(file, f.c_str());
-	}
-};
-
-class MiniDownloader;
-
-struct DownloadStatus
-{
-	long total;	//总共数据
-	long now;	//已下数据
-
-	MiniDownloader *pdm;
-
-	DownloadStatus()
-		:total(0), now(0), pdm(0)
-	{}
-
-	DownloadStatus(long t, long n, MiniDownloader *pObj)
-		:total(t), now(n), pdm(pObj)
-	{}
-};
+#include "data_type.h"
 
 class MiniDownloader : public Http
 {

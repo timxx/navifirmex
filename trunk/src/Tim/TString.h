@@ -71,7 +71,6 @@ public:
 	TString& trimLeft();
 	TString& trimRight();
 	TString& trim();
-
 };
 
 _TIM_END

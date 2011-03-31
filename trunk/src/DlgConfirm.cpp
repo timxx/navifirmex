@@ -31,6 +31,10 @@ BOOL CALLBACK DlgConfirm::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			if (!_infoText.empty())
 				SetItemText(IDS_INFO, _infoText);
+
+			if (!_title.empty()){
+				SetWindowText(_title);
+			}
 		}
 		return TRUE;
 

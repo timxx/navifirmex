@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ProgressView.h"
 #include "GUIWnd.h"
+#include "Tim\SException.h"
 
 using namespace std;
 
@@ -55,8 +56,22 @@ void ProgressView::clean()
 
 void ProgressView::SetProgressPos(int i, int pos)
 {
-	if (i >=0 && i < (int)_vProgress.size())
-		_vProgress[i]->SetPos(pos);
+	try
+	{
+		if (i >=0 && i < (int)_vProgress.size())
+		{
+			if (_vProgress[i]){
+				_vProgress[i]->SetPos(pos);
+			}
+		}
+	}
+	catch(const Tim::SException &e)
+	{
+		char info[256];
+
+		wsprintfA(info, "ProgressView::SetProgressPos: 发生[%s]异常", e.what());
+		MessageBoxA(_hWnd, info, "发生异常", MB_ICONERROR);
+	}
 }
 
 int ProgressView::NewItem(const FileInfo &item)
@@ -90,17 +105,28 @@ bool ProgressView::DelItem(int i)
 		return false;
 	int j = 0;
 
-	for (vector<ProgressBarEx*>::iterator it = _vProgress.begin();
-		it != _vProgress.end(); it++, j++)
+	try
 	{
-		if (j == i)
+		for (vector<ProgressBarEx*>::iterator it = _vProgress.begin();
+			it != _vProgress.end(); it++, j++)
 		{
-			(*it)->destroy();
-			delete *it;
-			_vProgress.erase(it);
+			if (j == i)
+			{
+				(*it)->destroy();
+				delete *it;
+				_vProgress.erase(it);
 
-			break;
+				break;
+			}
 		}
+	}
+	catch(const Tim::SException &e)
+	{
+		char info[256];
+
+		wsprintfA(info, "ProgressView::DelItem: 发生[%s]异常", e.what());
+		MessageBoxA(_hWnd, info, "发生异常", MB_ICONERROR);
+
 	}
 
 	return DeleteItem(i) == TRUE;
@@ -130,4 +156,62 @@ void ProgressView::Resize()
 
 		_vProgress[i]->MoveWindow(rt.left, rt.top, rt.Width(), rt.Height());
 	}
+}
+
+int ProgressView::GetProgress()
+{
+	if (_vProgress.empty()){
+		return 100;
+	}
+
+	float progress = 0;
+	int size = _vProgress.size();
+
+	try
+	{
+		for (size_t i=0; i<_vProgress.size(); i++)
+		{
+			int total =  _vProgress[i]->GetRange(FALSE, NULL);
+			if (total == 0)
+			{
+				size--;
+				continue;
+			}
+
+			progress += (float)_vProgress[i]->GetPos() / total;
+		}
+
+		if (size <= 0)
+			return 100;
+
+		//四舍五入
+		int percent = int((progress * 100 / size) * 10 + 5)/10;
+
+		return percent;
+	}
+	catch(const Tim::SException &e)
+	{
+		char info[256];
+
+		wsprintfA(info, "ProgressView::GetProgress(): 发生[%s]异常", e.what());
+		MessageBoxA(_hWnd, info, "发生异常", MB_ICONERROR);
+	}
+
+	return 100;
+}
+/*
+void ProgressView::SetProgressRange(int i, int high)
+{
+	if (i < 0 || i >= (int)_vProgress.size())
+		return ;
+
+	_vProgress[i]->SetRange32(0, high);
+}
+*/
+void ProgressView::SetProgressState(int i, int state)
+{
+	if (i < 0 || i >= (int)_vProgress.size())
+		return ;
+
+	_vProgress[i]->SetState(state);
 }

@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define __GUI_WINDOW_H__
 //////////////////////////////////////////////////////////////////////////
 #include <list>
+#include <shobjidl.h>
 
 #include "Tim\Dialog.h"
 #include "Tim\CommonCtrls.h"
@@ -45,11 +46,16 @@ public:
 	GUIWnd():
 		_hThreadProduct(INVALID_HANDLE_VALUE), _hThreadRelease(INVALID_HANDLE_VALUE),
 		_hThreadVariant(INVALID_HANDLE_VALUE), _hTreadGetImage(INVALID_HANDLE_VALUE),
-		_hBitmap(NULL), _hTreadGetFileList(INVALID_HANDLE_VALUE),
+		_hbmpPhone(NULL), _hTreadGetFileList(INVALID_HANDLE_VALUE),
 		_pConfig(0), _gdiplusToken(0), _imgProcess(0), _sortIndex(0),
 		_fPrompt(TRUE), _fOverwrite(TRUE), _nvFile(NULL)
 	{
 		_taskMgr = NULL;
+		_pTaskbar = NULL;
+		_fDownloading = false;
+		WM_TASKBARBUTTONCREATED = 0;
+		_fDisableTaskbar = TRUE;
+		_hbmpBkgnd = NULL;
 	}
 	~GUIWnd(){}
 
@@ -65,6 +71,7 @@ protected:
 	void OnDestroy();
 	void OnAboutClose(BOOL bNotEmpty, std::list<TiFile> &fileList);
 	void OnUrlDown(LPCTSTR url);
+	void OnInitMenu(HMENU hMenu);
 
 	void doProductChange();
 	void doReleaseChange();
@@ -101,8 +108,6 @@ protected:
 	void ShowVariants();
 
 	void ShowPopupMenu();
-
-	bool CopyTextToClipbrd(LPCTSTR lpData);
 
 	static bool SaveToFile(LPCTSTR lpPath, LPVOID data, DWORD dwLen);
 
@@ -190,11 +195,14 @@ protected:
 	//当前联网进度
 	static void WebProgress(double total, double now, void* pGuiWnd);
 
-	DWORD GetUrlFileSize(const TString &url);
-
 	//如果下载任务窗口没创建则创建
 	void ValidTaskMgr();
-
+	void InitTastBar();
+	//是否显示滚动进度
+	void ShowIndeterminateProgress(bool fShow = true);
+	void ShowToolTip(bool fShow = true);
+	//刷新Static控件背景
+	void InvalidStatic(UINT id);
 public:
 		static TString MakeFileSizeFmt(DWORD dwSize);
 
@@ -230,7 +238,7 @@ private:
 	Gdiplus::ImageEx	*_imgProcess;
 	ULONG_PTR	_gdiplusToken;
 
-	HBITMAP	_hBitmap;
+	HBITMAP	_hbmpPhone;
 
 	GetImageProcParam _getImgProcParam;
 
@@ -254,6 +262,17 @@ private:
 	BOOL	_fOverwrite;
 
 	NveFile *_nvFile;
+
+	//在系统任务栏显示进度
+	ITaskbarList3 *_pTaskbar;
+	//当运行在非WIN7时禁用
+	BOOL _fDisableTaskbar;
+	//只用于设置任务栏进度时判断
+	bool _fDownloading;
+	//
+	UINT WM_TASKBARBUTTONCREATED;
+
+	HBITMAP	_hbmpBkgnd;
 };
 
 #endif
