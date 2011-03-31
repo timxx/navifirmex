@@ -29,12 +29,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "MiniDownloader.h"
 #include "data_type.h"
 
-using namespace Tim;
-
-class TaskMgrWnd : public Window
+class TaskMgrWnd : public Tim::Window
 {
 public:
-	TaskMgrWnd(){
+	TaskMgrWnd()
+	{
 		_taskView = 0;
 	}
 	~TaskMgrWnd();
@@ -46,7 +45,7 @@ public:
 	void newTask(const FileInfo &fileInfo);
 	//新建续载任务
 	void newTask(const TiFile &tiFile);
-	bool hasTask() const {	return !_vDownloader.empty(); }
+	bool hasTask() const;
 
 	static TString MakeSpeedFmt(long lSize);
 
@@ -57,7 +56,6 @@ protected:
 	void OnCreate(LPCREATESTRUCT lpCreateStruct);
 	void OnSize(int type, int nWidth, int nHeight);
 	void OnCommand(int id, HWND hwndCtl, UINT uNotifyCode);
-	void OnDropFiles(HDROP hDrop);
 	void OnDownloadStatus(DownloadStatus *pds);
 	void OnFinish(BOOL bSuccess, MiniDownloader *pmd);
 	void OnTimer(UINT uid);
@@ -75,9 +73,14 @@ protected:
 	};
 
 	void SetTaskStatus(int i, TaskStatus status);
+	TaskStatus GetTaskStatus(int i);
 
 	bool SelectFolder(TString &folder);
 	static int CALLBACK BrowseCallbackProc(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
+
+	void ShowPopupMenu();
+
+	bool DeleteTask(int i);
 
 private:
 	ProgressView * _taskView;
@@ -85,7 +88,7 @@ private:
 	//与_vDownloader一一对应
 	std::vector<long> _vDownloadedSize;
 	//默认保存目录
-	TString _baseFolder;
+	Tim::TString _baseFolder;
 
 	std::list<TiFile> _tiFileList;
 };

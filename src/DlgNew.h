@@ -33,7 +33,7 @@ public:
 protected:
 	virtual BOOL CALLBACK runProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	bool IsUrl(const Tim::TString &str);
+	//bool IsUrl(const Tim::TString &str);
 
 };
 

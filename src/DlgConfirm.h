@@ -38,6 +38,10 @@ public:
 		_infoText = lpText;
 	}
 
+	void setTitle(LPCTSTR lpTitle){
+		_title = lpTitle;
+	}
+
 protected:
 	virtual BOOL CALLBACK runProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -45,6 +49,7 @@ protected:
 	bool _fYes;
 	bool _fPrompt;
 	TString _infoText;
+	TString _title;
 };
 
 #endif

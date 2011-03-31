@@ -28,7 +28,6 @@ Http::Http()
 	_pUser = NULL;
 	_strHeader = "Content-Type: application/x-www-form-urlencoded";
 	_fHttps = false;
-	//_lenContent = 0.f;
 }
 
 Http::~Http()
@@ -106,7 +105,11 @@ bool Http::Init(bool fHttps, const std::string& agent/* = "Http/1.0"*/)
 
 void Http::Close()
 {
-	curl_easy_cleanup(_curl);
+	if (_curl != NULL)
+	{
+		curl_easy_cleanup(_curl);
+		_curl = NULL;
+	}
 }
 
 HTTPRESULT_CODE Http::Get(const std::string& url, bool fIncudeHeader/* = false*/)

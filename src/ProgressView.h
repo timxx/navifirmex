@@ -32,7 +32,7 @@ class ProgressView : public ListView
 {
 public:
 	ProgressView()
-		:_lpfnOldProc(0), _iProgressColumn(1), _iSizeColumn(0)
+		:_lpfnOldProc(0), _iProgressColumn(1)
 	{}
 
 	~ProgressView(){
@@ -53,17 +53,17 @@ public:
 	void SetProgressColumn(int i){
 		_iProgressColumn = i;
 	}
-	void SetSizeColumn(int i){
-		_iSizeColumn = i;
-	}
 
 	void SetProgressPos(int i, int pos);
 
 	int NewItem(const FileInfo &item);
 	bool DelItem(int i);
 
-	void Resize();
+	//返回所总进度比(<= 100)
+	int GetProgress();
+	//void SetProgressRange(int i, int high);
 
+	void SetProgressState(int i, int state);
 protected:
 	static LRESULT CALLBACK SubProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK ListViewProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -71,11 +71,12 @@ protected:
 	void clean();
 	//size: range 0 ~ size
 	void NewProgress(long size);
+
+	void Resize();
 protected:
 	WNDPROC	_lpfnOldProc;
 	std::vector<ProgressBarEx*> _vProgress;
 	int _iProgressColumn;	//指定进度条在哪一列
-	int _iSizeColumn;		//指定文件大小在哪一列
 };
 
 #endif

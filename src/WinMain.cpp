@@ -31,6 +31,23 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow)
 	curl_global_init(CURL_GLOBAL_ALL);
 
 	GUIWnd guiWnd;
+
+	CreateMutex(NULL, FALSE, TEXT("NaviFirmEx_Mutex"));
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+		int ans = MessageBox(GetActiveWindow(), \
+			TEXT("您已经运行了一个实例了，您是要将程序置前还是再运行一个实例？\r\n")
+			TEXT("[确定]置前当前实例\r\n[否]再运行一个实例"),
+			TEXT("诺基亚固件下载器"), MB_ICONQUESTION | MB_YESNO);
+
+		if (ans == IDYES)
+		{
+			HWND hWnd = FindWindow(TEXT("#32770"), TEXT("NOKIA固件下载器"));
+			SetForegroundWindow(hWnd);	//如果打开了两个以上时只置前一个
+			return 0;
+		}
+	}
+
 	Tim::SException::install();
 
 	try

@@ -40,13 +40,24 @@ BOOL CALLBACK DlgNew::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				FocusCtrl(IDE_CODE_URL);
 				break;
 			}
+			
+			if (str.length() != 7)
+			{
+				int ans = msgBox(TEXT("一般CODE都7位的吧，是否重输？"),
+					TEXT("提醒"), MB_ICONQUESTION | MB_YESNO);
+				if (ans == IDYES)
+				{
+					FocusCtrl(IDE_CODE_URL);
+					break;
+				}
+			}
 
-			bool url = IsUrl(str);
+			//bool url = IsUrl(str);
 			//用Post str会被释放了
 			//但Send又会阻塞。。干脆由接收那边释放好了
 			TCHAR *buffer = new TCHAR[str.length()+1];
 			lstrcpy(buffer, str.c_str());
-			::PostMessage(getParent(), url ? NM_URLDOWN : NM_CODEDOWNLOAD, 0, reinterpret_cast<LPARAM>(buffer));
+			::PostMessage(getParent(),/* url ? NM_URLDOWN : */NM_CODEDOWNLOAD, 0, reinterpret_cast<LPARAM>(buffer));
 
 			destroy();
 		}
@@ -59,7 +70,7 @@ BOOL CALLBACK DlgNew::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	return FALSE;
 }
-
+/*
 bool DlgNew::IsUrl(const TString &str)
 {
 	//str不能为空
@@ -86,4 +97,4 @@ bool DlgNew::IsUrl(const TString &str)
 		return true;
 
 	return false;
-}
+}*/

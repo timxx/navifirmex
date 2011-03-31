@@ -76,7 +76,7 @@ protected:
 	static int progress_callback(void *pHttp, double dltotal, double dlnow, double ultotal, double ulnow);
 	virtual int Progress(double dltotal, double dlnow, double ultotal, double ulnow);
 
-	//static size_t GetContentLength(void *ptr, size_t size, size_t nmemb, void *pLen);
+// 	static size_t GetContentLength(void *ptr, size_t size, size_t nmemb, void *pLen);
 
 protected:
 	Buffer _buffer;	//
@@ -88,7 +88,6 @@ protected:
 
 	PROGRESSCALLBACK _pfnProgress;
 	void*	_pUser;
-	//double	_lenContent;	//Content-Length
 };
 
 #endif	//__HTTP_H__
