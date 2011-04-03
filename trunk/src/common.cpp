@@ -16,9 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#include <Windows.h>
-#include "Tim/Rect.h"
+#include "common.h"
 
 using namespace Tim;
 
@@ -138,4 +136,28 @@ _exit:
 	CloseClipboard();
 
 	return fOk;
+}
+
+//////////////////////////////////////////////////////////////////////////
+TString MakeFileSizeFmt(DWORD dwSize)
+{
+	TCHAR szUnit[3] = TEXT("B");
+
+	float size = (float)dwSize;
+
+	if (size >= 1024 && size < 1024 * 1024)//KB
+	{
+		size /= 1024;
+		lstrcpy(szUnit, TEXT("KB"));
+	}
+	else if (size >= 1024 *1024 && size < 1024 * 1024 *1024)//MB
+	{
+		size /= 1024 *1024;
+		lstrcpy(szUnit, TEXT("MB"));
+	}
+
+	TString sizeFmt;
+	sizeFmt.format(TEXT("%.2f %s"), size, szUnit);
+
+	return sizeFmt;
 }

@@ -373,6 +373,7 @@
     <ClCompile Include="..\src\DlgAbout.cpp" />
     <ClCompile Include="..\src\DlgNew.cpp" />
     <ClCompile Include="..\src\DlgConfirm.cpp" />
+    <ClCompile Include="..\src\DlgNewTask.cpp" />
     <ClCompile Include="..\src\GUIWnd.cpp" />
     <ClCompile Include="..\src\Http.cpp" />
     <ClCompile Include="..\src\ImageEx.cpp" />
@@ -403,6 +404,7 @@
     <ClInclude Include="..\src\DlgAbout.h" />
     <ClInclude Include="..\src\DlgNew.h" />
     <ClInclude Include="..\src\DlgConfirm.h" />
+    <ClInclude Include="..\src\DlgNewTask.h" />
     <ClInclude Include="..\src\GUIWnd.h" />
     <ClInclude Include="..\src\Http.h" />
     <ClInclude Include="..\src\ImageEx.h" />

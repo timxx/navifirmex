@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////////
 #include "GUIWnd.h"
 #include "Tim/SException.h"
+#include "Tim\file.h"
 //////////////////////////////////////////////////////////////////////////
 int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow)
 {

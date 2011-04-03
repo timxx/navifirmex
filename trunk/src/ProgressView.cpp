@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "ProgressView.h"
-#include "GUIWnd.h"
+#include "common.h"
 #include "Tim\SException.h"
 
 using namespace std;
@@ -79,7 +79,7 @@ int ProgressView::NewItem(const FileInfo &item)
 	int i = GetItemCount();
 	InsertItem(i, TEXT(""));
 	SetItemText(i, 1, (TCHAR*)item.name.c_str());
-	TString size = GUIWnd::MakeFileSizeFmt(item.size);
+	TString size = MakeFileSizeFmt(item.size);
 	SetItemText(i, 2, (TCHAR*)size.c_str());
 
 	NewProgress(item.size);

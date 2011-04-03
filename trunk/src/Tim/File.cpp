@@ -173,3 +173,20 @@ std::wstring File::GetFileName(const std::wstring &file)
 
 	return str.substr(pos + 1);
 }
+
+bool File::MakeDir(const std::wstring &folder)
+{
+	if (Exists(folder))	//不处理最后一个字符是\的情况
+		return true;	//此时虽然成功创建了，但返回false
+
+	int pos  = folder.rfind(L'\\');
+	if (pos != std::wstring::npos)
+		MakeDir(folder.substr(0, pos));
+
+	return CreateDirectoryW(folder.c_str(), NULL) ? true : false;
+}
+
+bool File::MakeDir(const std::string &folder)
+{
+	return MakeDir(atow(folder));
+}

@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Tim/File.h"
 #include "common.h"
 #include "DlgConfirm.h"
+#include "DlgNewTask.h"
 
 #pragma comment(lib, "shlwapi.lib")
 #pragma comment(lib, "Msimg32.lib")
@@ -709,6 +710,9 @@ void GUIWnd::OnDestroy()
 	if (_taskMgr){
 		delete _taskMgr;
 	}
+	if (_newTaskDlg){
+		delete _newTaskDlg;
+	}
 
 	if (_nvFile)
 	{
@@ -947,13 +951,13 @@ void GUIWnd::doDownLoad()
 {
 	ValidTaskMgr();
 
-	if (!_taskMgr->IsWindowVisible())
-		_taskMgr->showWindow();
+	_newTaskDlg->showWindow();
 
 	for (size_t i=0; i<_lvFile.GetItemCount(); i++)
 	{
 		if (_lvFile.GetCheck(i)){
-			_taskMgr->newTask(_vFiles[i]);
+			//_taskMgr->newTask(_vFiles[i]);
+			_newTaskDlg->AddTask(_vFiles[i]);
 		}
 	}
 }
@@ -2720,29 +2724,6 @@ void GUIWnd::SortListItem(int index)
 	}
 }
 //////////////////////////////////////////////////////////////////////////
-TString GUIWnd::MakeFileSizeFmt(DWORD dwSize)
-{
-	TCHAR szUnit[3] = TEXT("B");
-
-	float size = (float)dwSize;
-
-	if (size >= 1024 && size < 1024 * 1024)//KB
-	{
-		size /= 1024;
-		lstrcpy(szUnit, TEXT("KB"));
-	}
-	else if (size >= 1024 *1024 && size < 1024 * 1024 *1024)//MB
-	{
-		size /= 1024 *1024;
-		lstrcpy(szUnit, TEXT("MB"));
-	}
-
-	TString sizeFmt;
-	sizeFmt.format(TEXT("%.2f %s"), size, szUnit);
-
-	return sizeFmt;
-}
-//////////////////////////////////////////////////////////////////////////
 char* GUIWnd::GetFileDataFromZip(const TString& zipFile, const TString& name, DWORD& dwSize)
 {
 	HZIP hZip = OpenZip(zipFile, NULL);
@@ -2961,6 +2942,14 @@ void GUIWnd::ValidTaskMgr()
 			MessageBoxA(getSelf(), e.what(), "C++ Exception", MB_ICONERROR);
 			return ;
 		}
+	}
+
+	if (_newTaskDlg == NULL)
+	{
+		_newTaskDlg = new DlgNewTask;
+		_newTaskDlg->init(getHinst(), getSelf());
+
+		_newTaskDlg->create(IDD_NEW_TASK, _taskMgr);
 	}
 }
 

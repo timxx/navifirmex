@@ -109,7 +109,9 @@ public:
 	{	return ::MessageBox(_hWnd ? _hWnd : ::GetActiveWindow(), text.c_str(), caption.c_str(), uType);	}
 
 	LRESULT sendMsg(UINT uMsg, WPARAM wParam = 0U, LPARAM lParam = 0L)	{	return ::SendMessage(_hWnd, uMsg, wParam, lParam);	}
-
+	inline BOOL postMsg(UINT uMg, WPARAM wParam = 0U, LPARAM lParam = 0L){
+		return ::PostMessage(_hWnd, uMg, wParam, lParam);
+	}
 	virtual HWND create(LPCTSTR lpClassName, LPCTSTR lpWindowName, DWORD dwStyle,
 		int x = CW_USEDEFAULT, int y = 0, int nWidth = CW_USEDEFAULT, int nHeight = 0,
 		int uMenuID = 0, LPVOID lpParam = 0)
