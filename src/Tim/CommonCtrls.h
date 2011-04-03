@@ -333,6 +333,16 @@ public:
 	BOOL SetTextBkColor(COLORREF clrTextBk)	{	return ListView_SetTextBkColor(_hWnd, clrTextBk);	}
 
 	int InsertColumn(int iCol, const LPLVCOLUMN pcol)	{	return ListView_InsertColumn(_hWnd, iCol, pcol);	}
+	int InsertColumn(int iCol, LPTSTR lpColName)
+	{
+		LVCOLUMN lvc = {0};
+
+		lvc.mask = LVCF_TEXT;
+		lvc.pszText = lpColName;
+
+		return InsertColumn(iCol, &lvc);
+	}
+
 	void SetExtendedStyle(DWORD dwExStyle)	{	ListView_SetExtendedListViewStyle(_hWnd, dwExStyle);	}
 
 	BOOL SetColumnWidth(int iCol, int iWidth = LVSCW_AUTOSIZE_USEHEADER)

@@ -36,6 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Config.h"
 #include "TaskMgrWnd.h"
 #include "NveFile.h"
+#include "DlgNewTask.h"
 //////////////////////////////////////////////////////////////////////////
 using namespace _TIM;
 using namespace std;
@@ -56,6 +57,7 @@ public:
 		WM_TASKBARBUTTONCREATED = 0;
 		_fDisableTaskbar = TRUE;
 		_hbmpBkgnd = NULL;
+		_newTaskDlg = NULL;
 	}
 	~GUIWnd(){}
 
@@ -203,11 +205,11 @@ protected:
 	void ShowToolTip(bool fShow = true);
 	//Ë¢ÐÂStatic¿Ø¼þ±³¾°
 	void InvalidStatic(UINT id);
-public:
-		static TString MakeFileSizeFmt(DWORD dwSize);
 
 private:
 	TaskMgrWnd * _taskMgr;
+	DlgNewTask * _newTaskDlg;
+
 	ProductList	_lbProduct;
 	ListBox		_lbRelease;
 	VariantList	_lbVariant;

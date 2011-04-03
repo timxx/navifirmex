@@ -22,8 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#include <Windows.h>
+#include "Tim/Rect.h"
+#include "Tim/TString.h"
+
+
 HBITMAP GradienBitmap(HWND hWnd, COLORREF cr1, COLORREF cr2);
-void DrawBitmap(const HBITMAP &hBitmap, HDC hdc, const Rect &rect);
+void DrawBitmap(const HBITMAP &hBitmap, HDC hdc, const Tim::Rect &rect);
 bool CopyTextToClipbrd(LPCTSTR lpData);
 
+Tim::TString MakeFileSizeFmt(DWORD dwSize);
 #endif

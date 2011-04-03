@@ -53,6 +53,9 @@ public:
 
 	static std::wstring GetFileName(const std::wstring &file);
 
+	static bool MakeDir(const std::wstring &folder);
+	static bool MakeDir(const std::string &folder);
+
 protected:
 	HANDLE _hFile;
 	std::wstring _filePath;

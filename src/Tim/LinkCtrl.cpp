@@ -77,6 +77,7 @@ void LinkCtrl::create(HWND itemHandle, TCHAR * link, COLORREF linkColor)
 	// associate the URL structure with the static control
 	::SetWindowLongPtr(itemHandle, GWLP_USERDATA, (LONG_PTR)this);
 
+	setCursor(itemHandle);
 }
 void LinkCtrl::create(HWND itemHandle, int cmd, HWND msgDest)
 {
@@ -94,6 +95,8 @@ void LinkCtrl::create(HWND itemHandle, int cmd, HWND msgDest)
 
 	// associate the URL structure with the static control
 	::SetWindowLongPtr(itemHandle, GWLP_USERDATA, (LONG_PTR)this);
+
+	setCursor(itemHandle);
 }
 
 void LinkCtrl::destroy()
@@ -172,18 +175,20 @@ LRESULT LinkCtrl::runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		// Provide a hand cursor when the mouse moves over us
 		//case WM_SETCURSOR:
-	case WM_MOUSEMOVE:
-		{
-			if (_hCursor == 0)
-				_hCursor = LoadCursor(NULL, IDC_HAND);
-
-			SetCursor(_hCursor);
-			return TRUE;
-		}
+// 	case WM_MOUSEMOVE:
+// 		{
+// 			if (_hCursor == 0)
+// 				_hCursor = LoadCursor(NULL, IDC_HAND);
+// 
+// 			//SetCursor(_hCursor);
+// 
+// 			return TRUE;
+// 		}
 
 	case WM_LBUTTONDOWN:
 		_clicking = true;
-		break;
+		return TRUE;
+		//break;
 
 	case WM_LBUTTONUP:
 		if(_clicking)
@@ -223,4 +228,13 @@ LRESULT LinkCtrl::runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return HTCLIENT;
 	}
 	return ::CallWindowProc(_oldproc, hWnd, uMsg, wParam, lParam);
+}
+
+
+void LinkCtrl::setCursor(HWND hWnd)
+{
+	if (_hCursor == 0)
+		_hCursor = LoadCursor(NULL, IDC_HAND);
+
+	SetClassLong(hWnd, GCL_HCURSOR, (LONG)_hCursor);
 }

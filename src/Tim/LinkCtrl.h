@@ -57,6 +57,8 @@ protected :
         return ((LinkCtrl *)(::GetWindowLongPtr(hWnd, GWL_USERDATA)))->runProc(hWnd, uMsg, wParam, lParam);
     };
     LRESULT runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	void setCursor(HWND hWnd);
 };
 
 _TIM_END

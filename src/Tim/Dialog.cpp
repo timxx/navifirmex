@@ -30,7 +30,7 @@ void Dialog::create(UINT uID, LPVOID lParam/* = 0*/)
 	_fModeless = true;
 	_isCreated = true;
 
-	showWindow();
+	//showWindow();
 }
 
 void Dialog::doModal(UINT uID, LPVOID lParam/* = 0*/)

@@ -48,7 +48,14 @@ public:
 	bool hasTask() const;
 
 	static TString MakeSpeedFmt(long lSize);
-
+	//设置当前下载存放的文件夹
+	void setFolder(const TString &folder)
+	{
+		_baseFolder = folder;
+		if(_baseFolder.empty() && _baseFolder.at(_baseFolder.length()-1) != TEXT('\\')){
+			_baseFolder.push_back(TEXT('\\'));
+		}
+	}
 protected:
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -74,9 +81,6 @@ protected:
 
 	void SetTaskStatus(int i, TaskStatus status);
 	TaskStatus GetTaskStatus(int i);
-
-	bool SelectFolder(TString &folder);
-	static int CALLBACK BrowseCallbackProc(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
 
 	void ShowPopupMenu();
 

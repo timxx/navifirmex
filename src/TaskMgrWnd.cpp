@@ -441,18 +441,18 @@ void TaskMgrWnd::newTask(const FileInfo &fileInfo)
 		return ;
 	}
 
-	if (_baseFolder.empty())
-	{
-		if (!SelectFolder(_baseFolder))
-		{
-			msgBox(TEXT("不能进行下载，您没有选择存放的目录！"), TEXT("下载失败"), MB_ICONERROR);
-
-			return ;
-		}
-	}
+// 	if (_baseFolder.empty())
+// 	{
+// 		if (!SelectFolder(_baseFolder))
+// 		{
+// 			msgBox(TEXT("不能进行下载，您没有选择存放的目录！"), TEXT("下载失败"), MB_ICONERROR);
+// 
+// 			return ;
+// 		}
+// 	}
 
 	TString fullPath = _baseFolder;
-	fullPath += TEXT("\\") + fileInfo.name;
+	fullPath += /*TEXT("\\") + */fileInfo.name;
 
 	MiniDownloader *pmd = new MiniDownloader;
 
@@ -608,61 +608,6 @@ TString TaskMgrWnd::MakeSpeedFmt(long lSize)
 	//没那么牛上G吧？
 
 	return fmt;
-}
-bool TaskMgrWnd::SelectFolder(TString &folder)
-{
-	BROWSEINFO bi = {0};
-
-	TCHAR	szFilePath[MAX_PATH] = {0};
-	ITEMIDLIST *pidl = {0};
-
-	bi.hwndOwner	= _hWnd;       
-	bi.lpszTitle	= TEXT("请选择要保存到的文件夹");       
-	bi.ulFlags		= BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_NEWDIALOGSTYLE;
-	bi.lpfn			= BrowseCallbackProc;
-
-	char szFolder[MAX_PATH] = {0};
-
-	::SendMessage(getParent(), NM_GETLASTDIR, 0, (LPARAM)szFolder);
-
-#ifdef	UNICODE
-	wchar_t wszFolder[MAX_PATH];
-	atow(szFolder, wszFolder, MAX_PATH);
-	bi.lParam = (LPARAM)wszFolder;
-#else
-	bi.lParam = (LPARAM)szFolder;
-#endif
-
-	pidl = ::SHBrowseForFolder(&bi);
-	if (pidl == NULL)
-		return false;
-
-	if (!::SHGetPathFromIDList(pidl, szFilePath))
-		return false;
-
-	folder = szFilePath;
-	if (!folder.empty())
-	{
-		if (folder.at(folder.length()-1) == TEXT('\\')){
-			folder.pop_back();
-		}
-	}
-
-#ifdef UNICODE
-	wtoa(folder.c_str(), szFolder, MAX_PATH);
-	::SendMessage(getParent(), NM_SETLASTDIR, 0, reinterpret_cast<LPARAM>(szFolder));
-#else
-	::SendMessage(getParent(), NM_SETLASTDIR, 0, reinterpret_cast<LPARAM>(folder.c_str()));
-#endif
-	return true;
-}
-
-int CALLBACK TaskMgrWnd::BrowseCallbackProc(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
-{
-	if   (uMsg == BFFM_INITIALIZED ){	//设置初始化目录
-		SendMessage(hWnd, BFFM_SETSELECTION, TRUE, lpData);
-	}
-	return 0;
 }
 
 bool TaskMgrWnd::hasTask() const
