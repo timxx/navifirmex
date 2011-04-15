@@ -15,30 +15,40 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ABOUT_DLG_H
-#define ABOUT_DLG_H
 
 #pragma once
 
-#include "Tim/dialog.h"
-#include "Tim/LinkCtrl.h"
+#ifndef __CONDIG_DIALOG_H__
+#define __CONDIG_DIALOG_H__
 
-using namespace _TIM;
+#include "Tim\dialog.h"
+#include "ColorButton.h"
+#include "Config.h"
 
-class DlgAbout : public Dialog
+class DlgConfig : public Tim::Dialog
 {
 public:
-	DlgAbout(){}
-	~DlgAbout(){}
+	DlgConfig()
+		:_pConfig(0),
+		_crOldLeft(0), _crOldRight(0)
+	{}
 
 protected:
 	virtual BOOL CALLBACK runProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	void OnInit();
+	void OnCommand(int id);
+
+	void chooseColor(COLORREF &cr);
+
 private:
-	LinkCtrl _qqLink;
-	LinkCtrl _emailLink;
-	LinkCtrl _projectLink;
+	ColorButton _cbLeft;
+	ColorButton _cbRight;
+
+	Config *_pConfig;
+
+	COLORREF _crOldLeft;	//
+	COLORREF _crOldRight;
 };
 
 #endif

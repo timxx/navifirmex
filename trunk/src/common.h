@@ -32,4 +32,5 @@ void DrawBitmap(const HBITMAP &hBitmap, HDC hdc, const Tim::Rect &rect);
 bool CopyTextToClipbrd(LPCTSTR lpData);
 
 Tim::TString MakeFileSizeFmt(DWORD dwSize);
-#endif
+
+#endif	//__COMMON_H__

@@ -47,7 +47,7 @@ public:
 	inline HWND getSelf()	const	{	return _hWnd;	}
 	inline HWND GetParent()const	{	return _parentWnd;	}
 	inline HWND getParent()const	{	return _parentWnd;	}
-	inline HWND setParent(HWND hwndParent)	{	_parentWnd = hwndParent;	}
+	inline void setParent(HWND hwndParent)	{	_parentWnd = hwndParent;	}
 	inline HINSTANCE getHinst()const	{	return _hinst;	}
 
 	HINSTANCE HwndToHinst(HWND hWnd)	{	return (HINSTANCE)

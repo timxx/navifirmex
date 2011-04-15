@@ -98,7 +98,7 @@ void TaskMgrWnd::init(HINSTANCE hinst, HWND hwndParent)
 		sendMsg(WM_SYSCOMMAND, SC_MAXIMIZE, 0);
 	}
 
-	showWindow();
+	//showWindow();
 	UpdateWindow();
 
 	SetTimer(SPEED_TIMER_ID, 500);
@@ -273,17 +273,13 @@ void TaskMgrWnd::OnDownloadStatus(DownloadStatus *pds)
 	}
 
 	try
-	{
-		
+	{		
 		for (size_t i=0; i<_vDownloader.size(); i++)
 		{
 			if (_vDownloader[i])
 			{
 				if (pds->pdm == _vDownloader[i])
-				{
 					_taskView->SetProgressPos(i, pds->now);
-					//if ()
-				}
 			}
 		}
 	}
@@ -441,18 +437,15 @@ void TaskMgrWnd::newTask(const FileInfo &fileInfo)
 		return ;
 	}
 
-// 	if (_baseFolder.empty())
-// 	{
-// 		if (!SelectFolder(_baseFolder))
-// 		{
-// 			msgBox(TEXT("不能进行下载，您没有选择存放的目录！"), TEXT("下载失败"), MB_ICONERROR);
-// 
-// 			return ;
-// 		}
-// 	}
-
 	TString fullPath = _baseFolder;
-	fullPath += /*TEXT("\\") + */fileInfo.name;
+
+	if (!_baseFolder.empty())
+	{
+		if (_baseFolder.at(_baseFolder.length() - 1) != TEXT('\\'))
+			_baseFolder.push_back(TEXT('\\'));
+	}
+
+	fullPath += fileInfo.name;
 
 	MiniDownloader *pmd = new MiniDownloader;
 

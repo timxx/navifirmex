@@ -38,7 +38,7 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow)
 	{
 		int ans = MessageBox(GetActiveWindow(), \
 			TEXT("您已经运行了一个实例了，您是要将程序置前还是再运行一个实例？\r\n")
-			TEXT("[确定]置前当前实例\r\n[否]再运行一个实例"),
+			TEXT("[是]置前当前实例\r\n[否]再运行一个实例"),
 			TEXT("诺基亚固件下载器"), MB_ICONQUESTION | MB_YESNO);
 
 		if (ans == IDYES)
@@ -71,10 +71,6 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow)
 		}
 	}
 
-	catch(const TCHAR *what)
-	{
-		MessageBox(GetActiveWindow(), what, TEXT("异常"), MB_ICONERROR);
-	}
 	catch(const SException &e)
 	{
 // 		TString str;

@@ -106,6 +106,8 @@ bool DlgNewTask::SelectFolder(Tim::TString &folder)
 		return false;
 
 	folder = szFilePath;
+	folder.trim();
+
 	if (!folder.empty())
 	{
 		if (folder.at(folder.length()-1) != TEXT('\\')){
@@ -208,11 +210,29 @@ void DlgNewTask::doSelection(bool fSelAll /* = true */)
 void DlgNewTask::DownNow()
 {
 	TString folder = GetItemText(IDE_FOLDER);
+	//
+	folder.trim();
+
 	if (folder.empty())
 	{
 		msgBox(TEXT("您必须选择一个存放的目录！"), TEXT("提醒"), MB_ICONINFORMATION);
 		return ;
 	}
+
+	//Fixed:
+	//when user typed by keybord config will not save & not add the last '\'
+	//Apr. 15, 2011
+	if (folder.at(folder.length()-1) != TEXT('\\')){
+		folder.push_back(TEXT('\\'));
+	}
+
+	char szFolder[MAX_PATH] = {0};
+#ifdef UNICODE
+	wtoa(folder.c_str(), szFolder, MAX_PATH);
+	::SendMessage(getParent(), NM_SETLASTDIR, 0, reinterpret_cast<LPARAM>(szFolder));
+#else
+	::SendMessage(getParent(), NM_SETLASTDIR, 0, reinterpret_cast<LPARAM>(folder.c_str()));
+#endif
 
 	Tim::File::MakeDir(folder);	//确保存在文件夹
 
@@ -239,8 +259,12 @@ void DlgNewTask::DownNow()
 
 	if (hasTask)
 	{
-		if (!_taskMgrWnd->IsWindowVisible())
+		BOOL fShow = TRUE;
+		::SendMessage(getParent(), NM_SHOWTASKMGR, 0, (LPARAM)&fShow);
+
+		if (fShow){
 			_taskMgrWnd->showWindow();
+		}
 	}
 
 	postMsg(WM_CLOSE);

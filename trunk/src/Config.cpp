@@ -19,8 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Config::Config(const char *filePath)
 {
-	if (!filePath){
-		throw TEXT("Need to set config file path first!");
+	if (!filePath)
+	{
+		MessageBox(0, TEXT("Need to set config file path first!"), TEXT("Error"), 0);
+		return ;
 	}
 
 	lstrcpyA(_filePath, filePath);
@@ -39,6 +41,7 @@ Config::Config(const char *filePath)
 
 	_fExitPrompt = TRUE;
 	_fExitAction = TRUE;
+	_fShowTaskMgr = TRUE;
 }
 
 bool Config::load()
@@ -61,83 +64,14 @@ bool Config::load()
 		return false;
 	}
 
-	TiXmlElement * itemWindow = node->FirstChildElement("Window");
-	if (!itemWindow){
-		return false;
-	}
-
-	TiXmlElement* itemElement = itemWindow->FirstChildElement("MainGUI");
-	if (itemElement)
-	{
-		int x = 0, y = 0;
-
-		itemElement->Attribute("x", &x);
-		itemElement->Attribute("y", &y);
-
-		_pos.x = x < 0 ? 0 : x;
-		_pos.y = y < 0 ? 0 : y;
-
-		itemElement = itemElement->FirstChildElement("Color");
-
-		if (itemElement)
-		{
-			const char *begin = itemElement->Attribute("begin");
-			const char *end = itemElement->Attribute("end");
-
-			_cr1 = makeColor(begin);
-			_cr2 = makeColor(end);
-		}
-
-		itemElement = itemWindow->FirstChildElement("TaskMgr");
-		if (itemElement)
-		{
-			itemElement->Attribute("left", (int*)&_rcTask.left);
-			itemElement->Attribute("top", (int*)&_rcTask.top);
-			itemElement->Attribute("right", (int*)&_rcTask.right);
-			itemElement->Attribute("bottom", (int*)&_rcTask.bottom);
-			itemElement->Attribute("maxed", &_tgMaxed);
-		}
+	TiXmlNode *nodeWindow = node->FirstChild("Window");
+	if (nodeWindow){
+		loadWindow(nodeWindow);
 	}
 
 	TiXmlNode *nodeDownload = node->FirstChild("Download");
-	if (nodeDownload)
-	{
-		itemElement = nodeDownload->FirstChildElement("Folder");
-		if (itemElement)
-		{
-			const char *path = itemElement->GetText();
-			if (path){
-				lstrcpyA(_lastDir, path);
-			}
-		}
-
-		itemElement = nodeDownload->FirstChildElement("Server");
-		if (itemElement)
-		{
-			const char *value = itemElement->GetText();
-			if (value){
-				_nIndex = atoi(value);
-			}
-		}
-
-		TiXmlNode *nodePrompt = nodeDownload->FirstChild("Prompt");
-
-		if (nodePrompt)
-		{
-			itemElement = nodePrompt->FirstChildElement("Exit");
-			if (itemElement)
-			{
-				itemElement->Attribute("action", &_fExitAction);
-				itemElement->Attribute("ask", &_fExitPrompt);
-			}
-
-			itemElement = nodePrompt->FirstChildElement("Continue");
-			if (itemElement)
-			{
-				itemElement->Attribute("action", &_fDownAction);
-				itemElement->Attribute("ask", &_fDownloadPrompt);
-			}
-		}
+	if (nodeDownload){
+		loadDownload(nodeDownload);
 	}
 
 	//fixed....
@@ -159,78 +93,14 @@ bool Config::save()
 
 	TiXmlNode *nodeWindow = mainNode->FirstChild("Window");
 
-	if (nodeWindow)
-	{
-		TiXmlElement* itemElement = nodeWindow->FirstChildElement("MainGUI");
-		if (itemElement)
-		{
-			itemElement->SetAttribute("x", _pos.x);
-			itemElement->SetAttribute("y", _pos.y);
-
-			TiXmlElement *color = itemElement->FirstChildElement("Color");
-			if (color)
-			{
-				char *cr1 = makeColor(_cr1);
-				char *cr2 = makeColor(_cr2);
-
-				color->SetAttribute("begin", cr1);
-				color->SetAttribute("end", cr2);
-
-				delete [] cr1;
-				delete [] cr2;
-			}
-		}
-
-		itemElement = nodeWindow->FirstChildElement("TaskMgr");
-		if (itemElement)
-		{
-			itemElement->SetAttribute("left", _rcTask.left);
-			itemElement->SetAttribute("top", _rcTask.top);
-			itemElement->SetAttribute("right", _rcTask.right);
-			itemElement->SetAttribute("bottom", _rcTask.bottom);
-			itemElement->SetAttribute("maxed", _tgMaxed);
-		}
+	if (nodeWindow){
+		writeWindow(nodeWindow);
 	}
-	//应该没有else的，因为已经默认生成各节点了
 
 	TiXmlNode *nodeDownload = mainNode->FirstChild("Download");
 
-	if (nodeDownload)
-	{
-		TiXmlElement* itemElement = nodeDownload->FirstChildElement("Server");
-
-		if (itemElement)
-		{
-			char value[3] = {0};
-			_itoa(_nIndex, value, 10);
-			TiXmlText text(value);
-			TiXmlNode *child = itemElement->FirstChild();
-			if (child){
-				itemElement->ReplaceChild(child, text);
-			}
-		}
-
-		itemElement = nodeDownload->FirstChildElement("Folder");
-		if (itemElement)
-		{
-			TiXmlText text(_lastDir);
-			TiXmlNode *child = itemElement->FirstChild();
-			if (child){
-				itemElement->ReplaceChild(child, text);
-			}
-		}
-
-		TiXmlNode *nodePrompt = nodeDownload->FirstChild("Prompt");
-		if (nodePrompt)
-		{
-			itemElement = nodePrompt->FirstChildElement("Exit");
-			itemElement->SetAttribute("action", _fExitAction);
-			itemElement->SetAttribute("ask", _fExitPrompt);
-
-			itemElement = nodePrompt->FirstChildElement("Continue");
-			itemElement->SetAttribute("action", _fDownAction);
-			itemElement->SetAttribute("ask", _fDownloadPrompt);
-		}
+	if (nodeDownload){
+		writeDownload(nodeDownload);
 	}
 
 	return _cfgDoc->SaveFile();
@@ -242,7 +112,7 @@ void Config::makeDefault()
 		"<NaviFirmEx version=\"1.3\">"
 			"<Window>"
 				"<MainGUI x = \"100\" y = \"100\">"
-					"<Color begin = \">#BDB8ED\" end =\"#C0DACE\"/>"
+					"<Color begin = \"#BDB8ED\" end =\"#C0DACE\"/>"
 				"</MainGUI>"
 				"<TaskMgr left=\"0\" top=\"0\" right=\"540\" bottom=\"250\" maxed=\"0\"/>"
 			"</Window>"
@@ -253,6 +123,7 @@ void Config::makeDefault()
 					"<Exit action=\"1\" ask=\"1\"/>"
 					"<Continue action=\"1\" ask=\"1\"/>"
 				"</Prompt>"
+				"<TaskMgr show=\"1\"/>"
 			"</Download>"
 		"</NaviFirmEx>"
 		;
@@ -307,5 +178,163 @@ int Config::HexToDec(char hex)
 
 	}else{
 		return hex - '0';
+	}
+}
+
+void Config::loadWindow(TiXmlNode *node)
+{
+	TiXmlElement* itemElement = node->FirstChildElement("MainGUI");
+	if (itemElement)
+	{
+		int x = 0, y = 0;
+
+		itemElement->Attribute("x", &x);
+		itemElement->Attribute("y", &y);
+
+		_pos.x = x < 0 ? 0 : x;
+		_pos.y = y < 0 ? 0 : y;
+
+		itemElement = itemElement->FirstChildElement("Color");
+
+		if (itemElement)
+		{
+			const char *begin = itemElement->Attribute("begin");
+			const char *end = itemElement->Attribute("end");
+
+			_cr1 = makeColor(begin);
+			_cr2 = makeColor(end);
+		}
+
+		itemElement = node->FirstChildElement("TaskMgr");
+		if (itemElement)
+		{
+			itemElement->Attribute("left", (int*)&_rcTask.left);
+			itemElement->Attribute("top", (int*)&_rcTask.top);
+			itemElement->Attribute("right", (int*)&_rcTask.right);
+			itemElement->Attribute("bottom", (int*)&_rcTask.bottom);
+			itemElement->Attribute("maxed", &_tgMaxed);
+		}
+	}
+
+}
+
+void Config::loadDownload(TiXmlNode *node)
+{
+	TiXmlElement *itemElement = node->FirstChildElement("Folder");
+	if (itemElement)
+	{
+		const char *path = itemElement->GetText();
+		if (path){
+			lstrcpyA(_lastDir, path);
+		}
+	}
+
+	itemElement = node->FirstChildElement("Server");
+	if (itemElement)
+	{
+		const char *value = itemElement->GetText();
+		if (value){
+			_nIndex = atoi(value);
+		}
+	}
+
+	TiXmlNode *nodePrompt = node->FirstChild("Prompt");
+
+	if (nodePrompt)
+	{
+		itemElement = nodePrompt->FirstChildElement("Exit");
+		if (itemElement)
+		{
+			itemElement->Attribute("action", &_fExitAction);
+			itemElement->Attribute("ask", &_fExitPrompt);
+		}
+
+		itemElement = nodePrompt->FirstChildElement("Continue");
+		if (itemElement)
+		{
+			itemElement->Attribute("action", &_fDownAction);
+			itemElement->Attribute("ask", &_fDownloadPrompt);
+		}
+	}
+
+	itemElement = node->FirstChildElement("TaskMgr");
+	if (itemElement){
+		itemElement->Attribute("show", &_fShowTaskMgr);
+	}
+}
+
+void Config::writeWindow(TiXmlNode *node)
+{
+	TiXmlElement* itemElement = node->FirstChildElement("MainGUI");
+	if (itemElement)
+	{
+		itemElement->SetAttribute("x", _pos.x);
+		itemElement->SetAttribute("y", _pos.y);
+
+		TiXmlElement *color = itemElement->FirstChildElement("Color");
+		if (color)
+		{
+			char *cr1 = makeColor(_cr1);
+			char *cr2 = makeColor(_cr2);
+
+			color->SetAttribute("begin", cr1);
+			color->SetAttribute("end", cr2);
+
+			delete [] cr1;
+			delete [] cr2;
+		}
+	}
+
+	itemElement = node->FirstChildElement("TaskMgr");
+	if (itemElement)
+	{
+		itemElement->SetAttribute("left", _rcTask.left);
+		itemElement->SetAttribute("top", _rcTask.top);
+		itemElement->SetAttribute("right", _rcTask.right);
+		itemElement->SetAttribute("bottom", _rcTask.bottom);
+		itemElement->SetAttribute("maxed", _tgMaxed);
+	}
+}
+
+void Config::writeDownload(TiXmlNode *node)
+{
+	TiXmlElement* itemElement = node->FirstChildElement("Server");
+
+	if (itemElement)
+	{
+		char value[3] = {0};
+		_itoa(_nIndex, value, 10);
+		TiXmlText text(value);
+		TiXmlNode *child = itemElement->FirstChild();
+		if (child){
+			itemElement->ReplaceChild(child, text);
+		}
+	}
+
+	itemElement = node->FirstChildElement("Folder");
+	if (itemElement)
+	{
+		TiXmlText text(_lastDir);
+		TiXmlNode *child = itemElement->FirstChild();
+		if (child){
+			itemElement->ReplaceChild(child, text);
+		}
+	}
+
+	TiXmlNode *nodePrompt = node->FirstChild("Prompt");
+	if (nodePrompt)
+	{
+		itemElement = nodePrompt->FirstChildElement("Exit");
+		itemElement->SetAttribute("action", _fExitAction);
+		itemElement->SetAttribute("ask", _fExitPrompt);
+
+		itemElement = nodePrompt->FirstChildElement("Continue");
+		itemElement->SetAttribute("action", _fDownAction);
+		itemElement->SetAttribute("ask", _fDownloadPrompt);
+	}
+
+	itemElement = node->FirstChildElement("TaskMgr");
+	if (itemElement){
+		itemElement->SetAttribute("show", _fShowTaskMgr);
 	}
 }

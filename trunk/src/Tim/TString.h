@@ -1,5 +1,5 @@
 /*
-http://code.google.com/p/navifirmex/
+http://code.google.com/p/vcardtool/
 Copyright (C) 2011  Just Fancy (Just_Fancy@live.com)
 
 This program is free software: you can redistribute it and/or modify
@@ -71,6 +71,9 @@ public:
 	TString& trimLeft();
 	TString& trimRight();
 	TString& trim();
+
+	void Replace(const TString &what, const TString &with);
+	//void Replace(const TCHAR &what, const TCHAR &with);
 };
 
 _TIM_END
