@@ -1,5 +1,5 @@
 /*
-http://code.google.com/p/navifirmex/
+http://code.google.com/p/vcardtool/
 Copyright (C) 2011  Just Fancy (Just_Fancy@live.com)
 
 This program is free software: you can redistribute it and/or modify
@@ -130,7 +130,7 @@ TString& TString::trimLeft()
 	if (!empty())
 	{
 		iterator psz = begin();
-		while ((psz != end()) && (isspace(*psz)))
+		while ((psz != end()) && (_istspace(*psz)))	//fixed isspace to _istspace. Apr. 10, 2011
 			++psz;
 
 		erase(begin(), psz);
@@ -144,7 +144,7 @@ TString& TString::trimRight()
 	if (!empty())
 	{
 		reverse_iterator psz = rbegin();
-		while ((psz != rend()) && (isspace(*psz)/**psz==0x20 ||( 0x09 <= *psz && *psz <= 0x0D)*/))
+		while ((psz != rend()) && (_istspace(*psz)))
 			++psz;
 
 		erase(psz.base(), end());
@@ -156,3 +156,24 @@ TString& TString::trim()
 {
 	return trimRight().trimLeft();
 }
+
+void TString::Replace(const TString &what, const TString &with)
+{
+	if (what.empty())
+		return ;
+
+	while(true)
+	{
+		int pos = find(what);
+		if (pos == TString::npos)
+			break;
+
+		replace(pos, what.length(), with);
+	}
+}
+/*
+void TString::Replace(const TCHAR &what, const TCHAR &with)
+{
+	replace(begin( ), end( ), what , with);
+}
+*/

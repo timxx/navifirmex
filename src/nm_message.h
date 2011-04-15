@@ -51,4 +51,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //обть╫Ь╤х
 #define NM_DOWNPROGRESS		WM_USER + 31
 
+#define NM_SHOWTASKMGR		WM_USER	+ 32
+
+#define NM_CHANGEUI			WM_USER	+ 40
+
 #endif

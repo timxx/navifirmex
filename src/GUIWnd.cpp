@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "common.h"
 #include "DlgConfirm.h"
 #include "DlgNewTask.h"
+#include "DlgConfig.h"
 
 #pragma comment(lib, "shlwapi.lib")
 #pragma comment(lib, "Msimg32.lib")
@@ -96,11 +97,6 @@ BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		OnClose();
 		break;
 
-	case WM_SYSCOMMAND:
-		if (wParam == IDM_ABOUT)
-			sendMsg(WM_COMMAND, MAKEWPARAM(IDM_ABOUT, 0));
-		break;
-
 	case WM_TIMER:
 		if (wParam == UPDATE_TIMER_ID)
 		{
@@ -122,8 +118,7 @@ BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			_lvFile.DeleteAllItems();
 			//Mar. 20, 2011
 			//修正通过CODE下载时没更新显示
-			SendItemMsg(IDS_FILE_LIST, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(TEXT("文件列表：(0)")));
-
+			SetItemText(IDS_FILE_LIST, TEXT("(0)"));
 			_hTreadGetFileList = CreateThread(0, 0, GetFileListByCodeProc, this, 0, NULL);
 			if (_hTreadGetFileList == INVALID_HANDLE_VALUE){
 				msgBox(TEXT("创建线程时出错了！"), TEXT("错误"), MB_ICONERROR);
@@ -229,9 +224,23 @@ BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SetBkMode(HDC(wParam), TRANSPARENT);
 		return (BOOL)GetStockObject(NULL_BRUSH);
 
+	case NM_CHANGEUI:
+		InitBackground();
+		break;
+
+	case NM_SHOWTASKMGR:
+		if (_pConfig)
+		{
+			if (_pConfig->showTaskMgr())
+				(*(BOOL*)lParam) = TRUE;
+			else
+				(*(BOOL*)lParam) = FALSE;
+		}
+		break;
+
 	default:
 		if (uMsg == WM_TASKBARBUTTONCREATED){
-			InitTastBar();
+			InitTaskBar();
 		}
 	}
 
@@ -365,6 +374,40 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 			_taskMgr->showWindow();
 		}
 		break;
+
+	case IDM_DOWN_CONTINUE:
+		if (_nvFile && !_nvFile->empty())
+		{
+			ValidTaskMgr();
+
+			list<TiFile> vlist = _nvFile->getlist();
+			list<TiFile>::iterator it = vlist.begin();
+
+			for ( ; it != vlist.end(); it++){
+				_taskMgr->newTask(*it);
+			}
+		}
+		else
+		{
+			msgBox(TEXT("无文件可下载！"), TEXT("继续下载"), MB_ICONINFORMATION);
+		}
+
+		{
+			HMENU hMenu = GetMenu();
+			hMenu = GetSubMenu(hMenu, 0);
+			RemoveMenu(hMenu, 2, MF_BYPOSITION);
+			RemoveMenu(hMenu, 2, MF_BYPOSITION);
+		}
+
+		break;
+
+	case IDM_SETTINGS:
+		{
+			DlgConfig dlgCfg;
+			dlgCfg.init(getHinst(), getSelf());
+			dlgCfg.doModal(IDD_CONFIG, _pConfig);
+		}
+		break;
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -431,10 +474,18 @@ void GUIWnd::OnPaint()
 	PAINTSTRUCT ps;
 	HDC hdc = BeginPaint(_hWnd, &ps);
 
-	Rect rect;
-	GetClientRect(&rect);
+	//Fixed bug when restore window child controls
+	//will be covered by background
+	//Apr. 13, 2011
+	ExcludeChildRect(hdc);
 
-	DrawBitmap(_hbmpBkgnd, hdc, rect);
+	if (_hbmpBkgnd)
+	{
+		Rect rect;
+		GetClientRect(&rect);
+
+		DrawBitmap(_hbmpBkgnd, hdc, rect);
+	}
 
 	if (_hbmpPhone) //
 	{
@@ -491,7 +542,6 @@ void GUIWnd::OnInit()
 	}
 
 	SetDlgIcon(IDI_MAIN);
-	AddSysMenu();
 
 	TString cfgPath = MakeFilePath(TEXT("\\Config.xml"));
 	if (!cfgPath.empty())
@@ -512,15 +562,11 @@ void GUIWnd::OnInit()
 	}
 
 	//还原最后记录窗口位置
-	if (_pConfig->load())
-	{
+	if (_pConfig->load()){
 		moveTo(_pConfig->getXPos(), _pConfig->getYPos());
 	}
 
-	COLORREF cr1, cr2;
-	_pConfig->getColor(cr1, cr2);
-	_hbmpBkgnd = GradienBitmap(_hWnd, cr1, cr2);
-	InvalidateRect(NULL, TRUE);
+	InitBackground();
 
 	_status.init(_hinst, _hWnd);
 	_status.create();
@@ -585,9 +631,6 @@ void GUIWnd::OnInit()
 
 		if (_nvFile->load(nve))
 		{
-// 			int answer = msgBox(TEXT("是否继续下载上次未完成的任务？"),
-// 				TEXT("请确认"), MB_ICONQUESTION | MB_YESNO);
-
 			BOOL fYes = TRUE;
 			if (_pConfig)
 			{
@@ -611,6 +654,16 @@ void GUIWnd::OnInit()
 			{
 				ValidTaskMgr();
 
+				if (_pConfig)
+				{
+					if (_pConfig->showTaskMgr())
+						_taskMgr->showWindow();
+				}
+				else
+				{
+					_taskMgr->showWindow();
+				}
+
 				list<TiFile> vlist = _nvFile->getlist();
 				list<TiFile>::iterator it = vlist.begin();
 
@@ -618,10 +671,16 @@ void GUIWnd::OnInit()
 					_taskMgr->newTask(*it);
 				}
 			}
-
-			//删除，方便重新生成
-			File::Delete(nve);
+			else
+			{
+				HMENU hMenu = GetMenu();
+				hMenu = GetSubMenu(hMenu, 0);
+				InsertMenu(hMenu, 2, MF_BYPOSITION | MF_BYCOMMAND, IDM_DOWN_CONTINUE, TEXT("继续下载(&I)"));
+				InsertMenu(hMenu, 3, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
+			}
 		}
+
+		File::Delete(nve);
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -631,11 +690,6 @@ void GUIWnd::OnClose()
 	{
 		if (_taskMgr->hasTask())
 		{
-// 			int sel = msgBox(TEXT("还有下载任务在进行，确定要中止下载并退出程序吗？"),
-// 				TEXT("关闭程序"), MB_ICONQUESTION | MB_YESNO);
-// 			if (sel == IDNO)
-// 				return;
-
 			if (_pConfig)
 			{
 				if (_pConfig->exitWithPrompt())
@@ -943,7 +997,9 @@ void GUIWnd::doCopyUrl(UINT cmd)
 	if (!urlStr.empty())
 	{
 		if (!CopyTextToClipbrd(urlStr.c_str()))
-			msgBox(TEXT("复制URL到剪切板失败！"), TEXT("复制URL"), MB_ICONERROR);
+			msgBox(TEXT("复制URL到剪贴板失败！"), TEXT("复制URL"), MB_ICONERROR);
+		else
+			UpdateStatus(TEXT("成功复制URL到系统剪贴板"));
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -956,7 +1012,6 @@ void GUIWnd::doDownLoad()
 	for (size_t i=0; i<_lvFile.GetItemCount(); i++)
 	{
 		if (_lvFile.GetCheck(i)){
-			//_taskMgr->newTask(_vFiles[i]);
 			_newTaskDlg->AddTask(_vFiles[i]);
 		}
 	}
@@ -993,10 +1048,16 @@ void GUIWnd::doRefresh(bool fNeedACK/* = true*/)
 
 	TString().swap(_jsessionidStr);
 
-	::SendDlgItemMessage(_hWnd, IDS_PRODUCT, WM_SETTEXT, 0, (LPARAM)TEXT("产品型号：(0/0)"));
-	::SendDlgItemMessage(_hWnd, IDS_RELEASE, WM_SETTEXT, 0, (LPARAM)TEXT("发行版本：(0)"));
-	::SendDlgItemMessage(_hWnd, IDS_VARIANT, WM_SETTEXT, 0, (LPARAM)TEXT("CODE：(0/0)"));
-	::SendDlgItemMessage(_hWnd, IDS_FILE_LIST, WM_SETTEXT, 0, (LPARAM)TEXT("文件列表：(0)"));
+	::SendDlgItemMessage(_hWnd, IDS_PRODUCT, WM_SETTEXT, 0, (LPARAM)TEXT("(0/0)"));
+	::SendDlgItemMessage(_hWnd, IDS_RELEASE, WM_SETTEXT, 0, (LPARAM)TEXT("(0)"));
+	::SendDlgItemMessage(_hWnd, IDS_VARIANT, WM_SETTEXT, 0, (LPARAM)TEXT("(0/0)"));
+	::SendDlgItemMessage(_hWnd, IDS_FILE_LIST, WM_SETTEXT, 0, (LPARAM)TEXT("(0)"));
+
+	//fixed: Apr. 12, 2011
+	InvalidStatic(IDS_PRODUCT);
+	InvalidStatic(IDS_RELEASE);
+	InvalidStatic(IDS_VARIANT);
+	InvalidStatic(IDS_FILE_LIST);
 
 	list<Product>().swap(_lProduct);
 	list<Product>().swap(_lProductFilter);
@@ -1055,7 +1116,7 @@ back:
 		if (session.empty())
 			goto _exit;
 
-		ReplaceString(postData, TEXT("[sID]"), session);
+		postData.Replace(TEXT("[sID]"), session);
 
 		data = pWnd->GetSoap(http, postData, &dwSize);
 	}
@@ -1249,8 +1310,8 @@ back:
 		if (session.empty())
 			goto _exit;
 
-		ReplaceString(postData, TEXT("[sID]"),session);
-		ReplaceString(postData, TEXT("[pID]"), productID);
+		postData.Replace(TEXT("[sID]"),session);
+		postData.Replace(TEXT("[pID]"), productID);
 
 		data = pWnd->GetSoap(http, postData, &dwSize);
 	}
@@ -1404,8 +1465,8 @@ back:
 		if (session.empty())
 			goto _exit;
 
-		ReplaceString(postData, TEXT("[sID]"), session);
-		ReplaceString(postData, TEXT("[vID]"), releaseID);
+		postData.Replace(TEXT("[sID]"), session);
+		postData.Replace(TEXT("[vID]"), releaseID);
 
 		//postData += postData;
 
@@ -1511,7 +1572,6 @@ _exit:
 		delete pXmlDoc;
 
 	return ret;
-
 }
 //////////////////////////////////////////////////////////////////////////
 void GUIWnd::GetVariantInfo(TiXmlNode *node, TiXmlNode *bodyNode)
@@ -1594,6 +1654,7 @@ void GUIWnd::ShowProducts()
 	else
 	{
 		TString filterStr = _edProduct.getText();
+		filterStr.trim();
 
 		for (list<Product>::iterator it = _lProduct.begin();
 			it != _lProduct.end(); ++it)
@@ -1625,7 +1686,7 @@ void GUIWnd::ShowProducts()
 
 	ReleaseDC(_hWnd, hdc);
 
-	tmpStr.format(TEXT("产品型号：(%d/%d)"), _lProductFilter.size(), _lProduct.size());
+	tmpStr.format(TEXT("(%d/%d)"), _lProductFilter.size(), _lProduct.size());
 	SendItemMsg(IDS_PRODUCT, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(tmpStr.c_str()));
 
 	InvalidStatic(IDS_PRODUCT);
@@ -1648,7 +1709,7 @@ void GUIWnd::ShowReleases()
 	}
 
 	TString tmpStr;
-	tmpStr.format(TEXT("发行版本：(%d)"), _vRelease.size());
+	tmpStr.format(TEXT("(%d)"), _vRelease.size());
 	SendItemMsg(IDS_RELEASE, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(tmpStr.c_str()));
 
 	InvalidStatic(IDS_RELEASE);
@@ -1681,7 +1742,7 @@ void GUIWnd::ShowVariants()
 	else
 	{
 		TString filterStr = _edVariant.getText();
-
+		filterStr.trim();
 		for (list<Variant>::iterator it=_lVariant.begin();
 			it != _lVariant.end(); ++it)
 		{
@@ -1713,7 +1774,7 @@ void GUIWnd::ShowVariants()
 
 	ReleaseDC(_hWnd, hdc);
 
-	tmpStr.format(TEXT("CODE：(%d/%d)"), _lVariantFilter.size(), _lVariant.size());
+	tmpStr.format(TEXT("(%d/%d)"), _lVariantFilter.size(), _lVariant.size());
 	SendItemMsg(IDS_VARIANT, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(tmpStr.c_str()));
 
 	InvalidStatic(IDS_VARIANT);
@@ -1827,44 +1888,6 @@ void GUIWnd::ShowPhonePicture(const Product &curProduct)
 		InvalidateRect(&rect, TRUE);
 	}
 }
-/*
-HBITMAP GUIWnd::ImageBufferToHBitmap(const char *buffer, DWORD dwSize)
-{
-	HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, dwSize);
-	if (!hGlobal){
-		return NULL;
-	}
-
-	LPVOID pData = GlobalLock(hGlobal);
-	if (!pData){
-		return NULL;
-	}
-
-	memcpy(pData, buffer, dwSize);
-
-	GlobalUnlock(hGlobal);
-
-	IStream *pStream = NULL;
-
-	if (FAILED(CreateStreamOnHGlobal(hGlobal, TRUE, &pStream)))
-		return NULL;
-
-	if (pStream == NULL)
-		return NULL;
-
-	Gdiplus::Bitmap *pBitmap = new Gdiplus::Bitmap(pStream);
-
-	pStream->Release();
-
-	HBITMAP hBitmap = NULL;
-
-	pBitmap->GetHBITMAP(Gdiplus::Color(255, 255, 255), &hBitmap);
-
-	delete pBitmap;
-
-	return hBitmap;
-}
-*/
 //////////////////////////////////////////////////////////////////////////
 HBITMAP GUIWnd::ImageFileToHBitmap(const TString &file)
 {
@@ -1957,13 +1980,12 @@ void GUIWnd::DownloadImage(const TString &url, const TString &fileSave)
 	if (!buffer || !dwBufSize)
 		return ;
 
-	//char *imgBuffer = NULL;
 	ZIPENTRY ze = {0};
 
 	HZIP hZip = OpenZip(buffer, dwBufSize, NULL);
-	if (!hZip)
-		//goto _exit;
+	if (!hZip){
 		return;
+	}
 
 	GetZipItem(hZip, -1, &ze);
 
@@ -1976,10 +1998,6 @@ void GUIWnd::DownloadImage(const TString &url, const TString &fileSave)
 		//只认第一张找到的！
 		if (StrStrI(ze.name, TEXT(".png")) != 0)
 		{
-			//imgBuffer = new char[ze.unc_size+1];
-			//if (UnzipItem(hZip, i, imgBuffer, ze.unc_size) == ZR_OK)
-				//_hBitmap = ImageBufferToHBitmap(imgBuffer, ze.unc_size);
-
 			if (UnzipItem(hZip, i, fileSave.c_str()) == ZR_OK)
 			{
 				_hbmpPhone = ImageFileToHBitmap(fileSave);
@@ -1998,28 +2016,8 @@ void GUIWnd::DownloadImage(const TString &url, const TString &fileSave)
 			break;
 		}
 	}
-
-//_exit:
-
-// 	if (imgBuffer)
-// 		delete [] imgBuffer;
 	if (hZip)
 		CloseZip(hZip);
-}
-//////////////////////////////////////////////////////////////////////////
-void GUIWnd::DeleteDirectory(const TString &folder)
-{
-	SHFILEOPSTRUCT sfos = {0};
-
-	TString temp = folder;
-	temp.push_back(0);
-
-	sfos.fFlags = FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMATION;
-	sfos.wFunc	= FO_DELETE;
-	sfos.hwnd	= NULL;
-	sfos.pFrom	= temp.c_str();
-
-	SHFileOperation(&sfos);
 }
 //////////////////////////////////////////////////////////////////////////
 DWORD GUIWnd::GetFileData(const TString &filePath, LPVOID buffer)
@@ -2047,18 +2045,6 @@ DWORD GUIWnd::GetFileData(const TString &filePath, LPVOID buffer)
 	return dwRead;
 }
 //////////////////////////////////////////////////////////////////////////
-void GUIWnd::ReplaceString(TString &srcStr, const TString &what, const TString &with)
-{
-	while (1)
-	{
-		int pos = srcStr.find(what);
-		if (pos == TString::npos)
-			break;
-
-		srcStr.replace(pos, what.length(), with.c_str());
-	}
-}
-//////////////////////////////////////////////////////////////////////////
 bool GUIWnd::FileNeedUpdate(const TString &filePath, DWORD dwMinFileSize/* = 0*/)
 {
 	HANDLE hFile = CreateFile(filePath.c_str(), GENERIC_READ, 
@@ -2076,19 +2062,6 @@ bool GUIWnd::FileNeedUpdate(const TString &filePath, DWORD dwMinFileSize/* = 0*/
 	CloseHandle(hFile);
 
 	return false;
-}
-//////////////////////////////////////////////////////////////////////////
-//往系统菜单添加 关于
-//////////////////////////////////////////////////////////////////////////
-void GUIWnd::AddSysMenu()
-{
-	HMENU hSysMenu = GetSystemMenu(_hWnd, FALSE);
-
-	if (hSysMenu != NULL)
-	{
-		AppendMenu(hSysMenu, MF_SEPARATOR, 0, NULL);
-		AppendMenu(hSysMenu, MF_STRING, IDM_ABOUT, TEXT("关于(&A)"));
-	}
 }
 //////////////////////////////////////////////////////////////////////////
 string GUIWnd::GetFileUrlByID(TiXmlNode *bodyNode, const char *ID)
@@ -2337,8 +2310,8 @@ DWORD WINAPI GUIWnd::GetFileListByCodeProc(LPVOID lParam)
 	if (session.empty())
 		goto _exit;
 
-	ReplaceString(postData, TEXT("[sID]"), session);
-	ReplaceString(postData, TEXT("[code]"), pWnd->_code);
+	postData.Replace(TEXT("[sID]"), session);
+	postData.Replace(TEXT("[code]"), pWnd->_code);
 
 	data = pWnd->GetSoap(http, postData, &dwSize);
 
@@ -2390,6 +2363,12 @@ TString GUIWnd::GetSessionID()
 	}
 
 	char *p = StrStrIA(hdrBuf, "JSESSIONID=");
+
+	//fixed bug when server unavailable
+	//Apr. 12, 2011
+	if (!p){
+		return session;
+	}
 
 	while (*p && *p != '=')
 		p++;
@@ -2527,7 +2506,7 @@ TString GUIWnd::GetFileElement(TiXmlNode *fileNode, const char *tagName, TiXmlNo
 void GUIWnd::ShowFiles()
 {
 	TString tmpStr;
-	tmpStr.format(TEXT("文件列表：(%d)"), _vFiles.size());
+	tmpStr.format(TEXT("(%d)"), _vFiles.size());
 	::SendMessage(HwndFromId(IDS_FILE_LIST), WM_SETTEXT, 0, reinterpret_cast<LPARAM>(tmpStr.c_str()));
 	InvalidStatic(IDS_FILE_LIST);
 
@@ -2755,7 +2734,6 @@ char* GUIWnd::GetFileDataFromZip(const TString& zipFile, const TString& name, DW
 bool GUIWnd::SaveFileToZip(const TString& zipFile, const TString& name, LPVOID lpData, DWORD dwSize)
 {
 	HZIP hZip = NULL;
-	//vector<TString> vTmpFiles;
 	map<TString, TString> mTmpFiles;
 	TCHAR tmp[MAX_PATH] = {0};
 
@@ -2787,7 +2765,6 @@ bool GUIWnd::SaveFileToZip(const TString& zipFile, const TString& name, LPVOID l
 
 						path.format(TEXT("%s\\%s"), tmp, ze.name);
 						if (UnzipItem(hZip, i, path) == ZR_OK)
-							//vTmpFiles.push_back(path);
 							mTmpFiles[ze.name] = path;
 					}
 				}
@@ -2819,7 +2796,7 @@ bool GUIWnd::SaveFileToZip(const TString& zipFile, const TString& name, LPVOID l
 	CloseZip(hZip);
 
 	if (tmp[0]){
-		DeleteDirectory(tmp);
+		File::RmDir(tmp);
 	}
 
 	return true;
@@ -2853,7 +2830,7 @@ char* GUIWnd::GetSoap(Http& http, LPCTSTR lpPost, LPDWORD pdwSize)
 {
 	if (!http.Init(true, AGENT_NAME))
 	{
-		UpdateStatus(TEXT("WinINet出错！"));
+		UpdateStatus(TEXT("LibCurl初始化出错了！"));
 		return 0;
 	}
 
@@ -2885,23 +2862,13 @@ TString GUIWnd::TryGetSessionID()
 
 	if (session.empty())
 	{
-		int count = 3;
-		while (count > 0)	//尝试3次如果获取失败的话
-		{
-			UpdateStatus(TEXT("尝试获取SessionID..."));
-			session = GetSessionID();
-			if (!session.empty())
-				break;
-
-			count --;
-			Sleep(1000);
-		}
+		UpdateStatus(TEXT("尝试获取SessionID..."));
+		session = GetSessionID();
 	}
 
 	if (session.empty())
 	{
-		msgBox(TEXT("无法获取有效身份验证ID，请稍后再尝试！\r\n")
-			TEXT("注意：请勿在短时间内频繁切换服务器！\r\n否则请重启程序再试。"),
+		msgBox(TEXT("无法获取有效身份验证ID，请稍后再尝试！\r\n"),
 			TEXT("出错"), MB_ICONERROR);
 	}
 
@@ -2953,7 +2920,7 @@ void GUIWnd::ValidTaskMgr()
 	}
 }
 
-void GUIWnd::InitTastBar()
+void GUIWnd::InitTaskBar()
 {	
 	if(SUCCEEDED(CoInitialize(NULL)))
 	{
@@ -2997,4 +2964,53 @@ void GUIWnd::InvalidStatic(UINT id)
 	::GetWindowRect(HwndFromId(id), &rect);
 	ScreenToClient(&rect);
 	InvalidateRect(&rect, TRUE);
+}
+
+void GUIWnd::ExcludeChildRect(HDC hdc)
+{
+	Rect rc;
+
+	vector<Rect> vRect;
+
+	::GetWindowRect(HwndFromId(IDE_PRODUCT_FILTER), &rc);
+	vRect.push_back(rc);
+
+	_lbProduct.GetWindowRect(&rc);
+	vRect.push_back(rc);
+
+	_lbRelease.GetWindowRect(&rc);
+	vRect.push_back(rc);
+
+	::GetWindowRect(HwndFromId(IDE_VARIANT_FILTER), &rc);
+	vRect.push_back(rc);
+
+	_lbVariant.GetWindowRect(&rc);
+	vRect.push_back(rc);
+
+	_lvFile.GetWindowRect(&rc);
+	vRect.push_back(rc);
+
+	_status.GetWindowRect(&rc);
+	vRect.push_back(rc);
+
+	for (size_t i=0; i<vRect.size(); i++)
+	{
+		ScreenToClient(&vRect[i]);
+		ExcludeClipRect(hdc, vRect[i].left, vRect[i].top, vRect[i].right, vRect[i].bottom);
+	}
+}
+
+void GUIWnd::InitBackground()
+{
+	if (_pConfig == NULL)
+		return ;
+
+	if (_hbmpBkgnd)
+		DeleteObject(_hbmpBkgnd);
+
+	COLORREF cr1, cr2;
+	_pConfig->getColor(cr1, cr2);
+	_hbmpBkgnd = GradienBitmap(_hWnd, cr1, cr2);
+
+	InvalidateRect(NULL, TRUE);
 }

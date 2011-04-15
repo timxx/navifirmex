@@ -353,6 +353,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\ColorButton.cpp" />
     <ClCompile Include="..\src\common.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -371,6 +372,7 @@
     </ClCompile>
     <ClCompile Include="..\src\Config.cpp" />
     <ClCompile Include="..\src\DlgAbout.cpp" />
+    <ClCompile Include="..\src\DlgConfig.cpp" />
     <ClCompile Include="..\src\DlgNew.cpp" />
     <ClCompile Include="..\src\DlgConfirm.cpp" />
     <ClCompile Include="..\src\DlgNewTask.cpp" />
@@ -398,10 +400,12 @@
     <ClCompile Include="..\src\NveFile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\ColorButton.h" />
     <ClInclude Include="..\src\common.h" />
     <ClInclude Include="..\src\Config.h" />
     <ClInclude Include="..\src\data_type.h" />
     <ClInclude Include="..\src\DlgAbout.h" />
+    <ClInclude Include="..\src\DlgConfig.h" />
     <ClInclude Include="..\src\DlgNew.h" />
     <ClInclude Include="..\src\DlgConfirm.h" />
     <ClInclude Include="..\src\DlgNewTask.h" />

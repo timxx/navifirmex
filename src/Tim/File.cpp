@@ -190,3 +190,23 @@ bool File::MakeDir(const std::string &folder)
 {
 	return MakeDir(atow(folder));
 }
+
+bool File::RmDir(const std::wstring &folder)
+{
+	SHFILEOPSTRUCT sfos = {0};
+
+	std::wstring temp = folder;
+	temp.push_back(0);
+
+	sfos.fFlags = FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMATION;
+	sfos.wFunc	= FO_DELETE;
+	sfos.hwnd	= NULL;
+	sfos.pFrom	= temp.c_str();
+
+	return SHFileOperationW(&sfos) == 0;
+}
+
+bool File::RmDir(const std::string &folder)
+{
+	return RmDir(atow(folder));
+}

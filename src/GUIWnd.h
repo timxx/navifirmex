@@ -115,7 +115,6 @@ protected:
 
 	void ShowPhonePicture(const Product &curProduct);
 
-	//HBITMAP ImageBufferToHBitmap(const char *buffer, DWORD dwSize);
 	HBITMAP ImageFileToHBitmap(const TString &file);
 
 	//程序根目录
@@ -128,12 +127,7 @@ protected:
 	static DWORD WINAPI GetImageProc(LPVOID lParam);
 	void DownloadImage(const TString &url, const TString &fileSave);
 
-	//删除folder
-	static void DeleteDirectory(const TString &folder);
-
 	static DWORD GetFileData(const TString &filePath, LPVOID buffer);
-
-	static void ReplaceString(TString &srcStr, const TString &what, const TString &with);
 
 	template<typename T>
 	T * list_at(list<T> &listSrc, size_t index)
@@ -150,8 +144,6 @@ protected:
 	}
 	//根据文件的存在、大小判断是否需更新
 	static bool FileNeedUpdate(const TString &filePath, DWORD dwMinFileSize = 0);
-
-	void AddSysMenu();
 
 	//取#ID_XX的URL
 	string GetFileUrlByID(TiXmlNode *bodyNode, const char *ID);
@@ -199,12 +191,16 @@ protected:
 
 	//如果下载任务窗口没创建则创建
 	void ValidTaskMgr();
-	void InitTastBar();
+	void InitTaskBar();
 	//是否显示滚动进度
 	void ShowIndeterminateProgress(bool fShow = true);
 	void ShowToolTip(bool fShow = true);
 	//刷新Static控件背景
 	void InvalidStatic(UINT id);
+
+	void ExcludeChildRect(HDC hdc);
+
+	void InitBackground();
 
 private:
 	TaskMgrWnd * _taskMgr;

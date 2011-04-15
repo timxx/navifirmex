@@ -68,6 +68,10 @@ BOOL DlgAbout::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		return (BOOL)GetStockObject(NULL_BRUSH);
 
+	case WM_CTLCOLOREDIT:
+		SetBkMode(HDC(wParam), TRANSPARENT);
+		return (BOOL)GetStockObject(NULL_BRUSH);
+
 	case WM_CLOSE:
 		destroy();
 		break;
@@ -99,7 +103,7 @@ void DlgAbout::OnInit()
 #endif
 	SetItemText(IDS_BUILT, buildTime);
 
-	buildTime = TEXT("诺基亚固件下载器 v1.3 ");
+	buildTime = TEXT("NOKIA固件下载器 v1.3 ");
 #ifdef UNICODE
 	buildTime += TEXT("(UNICODE)");
 #else
@@ -111,6 +115,8 @@ void DlgAbout::OnInit()
 	_qqLink.create(HwndFromId(IDS_QQ), TEXT("tencent://message/?uin=551907703"));
 	_emailLink.init(_hinst, _hWnd);
 	_emailLink.create(HwndFromId(IDS_EMAIL), TEXT("mailto:Just_Fancy@live.com"));
+	_projectLink.init(_hinst, _hWnd);
+	_projectLink.create(HwndFromId(IDS_PROJECT), TEXT("http://code.google.com/p/navifirmex/"));
 
 	SetItemText(IDC_EDIT1, szGNUInfo);
 }

@@ -40,66 +40,32 @@ public:
 	bool load();
 	bool save();
 
-	void setPos(const Point &pos){
-		_pos = pos;
-	}
+	void setPos(const Point &pos)	{	_pos = pos;	}
 	void setTaskMgrRect(const Rect &rc, BOOL fMaxed = FALSE){
 		_rcTask = rc;
 		_tgMaxed = fMaxed;
 	}
-	BOOL isTaskMgrMaxed() const{
-		return _tgMaxed;
-	}
-	void setIndex(int index){
-		_nIndex = index;
-	}
-	void setLastDir(const LPCSTR lpDir){
-		strcpy(_lastDir, lpDir);
-	}
-
-	void setDownPrompt(BOOL fPrompt){
-		_fDownloadPrompt = fPrompt;
-	}
-
-	void setDownAction(BOOL fYes){
-		_fDownAction = fYes;
-	}
-
-	void setExitPrompt(BOOL fPrompt){
-		_fExitPrompt = fPrompt;
-	}
-
-	void setExitAction(BOOL fYes){
-		_fExitAction = fYes;
-	}
-
-	void getLastDir(LPSTR lpDir) const{
-		strcpy(lpDir, _lastDir);
-	}
+	BOOL isTaskMgrMaxed() const	{	return _tgMaxed;	}
+	void setIndex(int index)	{	_nIndex = index;	}
+	void setLastDir(const LPCSTR lpDir)	{	strcpy(_lastDir, lpDir);	}
+	void setDownPrompt(BOOL fPrompt)	{	_fDownloadPrompt = fPrompt;	}
+	void setDownAction(BOOL fYes)		{	_fDownAction = fYes;		}
+	void setExitPrompt(BOOL fPrompt)	{	_fExitPrompt = fPrompt;		}
+	void setExitAction(BOOL fYes)		{	_fExitAction = fYes;		}
+	void setColor(COLORREF cr1, COLORREF cr2)	{	_cr1 = cr1; _cr2 = cr2;	}
+	void setShowTaskMgr(BOOL fShow)	{	_fShowTaskMgr = fShow;	}
+	
+	void getLastDir(LPSTR lpDir) const	{	strcpy(lpDir, _lastDir);	}
 	int getXPos()	const	{	return _pos.x;		}
 	int getYPos()	const	{	return _pos.y;		}
 	const Rect& getTaskRect() const	{	return _rcTask;	} 
-	int getIndex()	const	{	return _nIndex;			}
-
-	void getColor(COLORREF &cr1, COLORREF &cr2){
-		cr1 = _cr1; cr2 = _cr2;
-	}
-
-	BOOL downloadWithPompt() const {
-		return _fDownloadPrompt;
-	}
-
-	BOOL downloadAction() const{
-		return _fDownAction;
-	}
-
-	BOOL exitWithPrompt() const {
-		return _fExitPrompt;
-	}
-
-	BOOL extiAction() const {
-		return _fExitAction;
-	}
+	int  getIndex()	const	{	return _nIndex;			}
+	void getColor(COLORREF &cr1, COLORREF &cr2)	{	cr1 = _cr1; cr2 = _cr2;	}
+	BOOL downloadWithPompt()const	{	return _fDownloadPrompt;	}
+	BOOL downloadAction()	const	{	return _fDownAction;		}
+	BOOL exitWithPrompt()	const	{	return _fExitPrompt;		}
+	BOOL extiAction()		const	{	return _fExitAction;		}
+	BOOL showTaskMgr()		const	{	return _fShowTaskMgr;		}
 protected:
 	void makeDefault();
 
@@ -107,6 +73,13 @@ protected:
 	char *makeColor(COLORREF cr);
 
 	inline int HexToDec(char hex);
+
+	void loadWindow(TiXmlNode *node);
+	void loadDownload(TiXmlNode *node);
+
+	void writeWindow(TiXmlNode *node);
+	void writeDownload(TiXmlNode *node);
+
 private:
 	Point	_pos;
 	int		_nIndex;
@@ -122,5 +95,6 @@ private:
 	BOOL	_fDownAction;		//TRUE - 点击确定
 	BOOL	_fExitPrompt;		//退出有任务时是否提醒
 	BOOL	_fExitAction;		//TRUE － 确定
+	BOOL	_fShowTaskMgr;
 };
 #endif

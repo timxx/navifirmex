@@ -25,7 +25,7 @@ BOOL CALLBACK DlgConfirm::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_INITDIALOG:
 		{
-			SetDefaultButton(IDNO);
+			//SetDefaultButton(IDNO);
 			//不知为啥加下面这行后主窗口的X也不起作用了。。。
 			//SetClassLongPtr(_hWnd, GCL_STYLE, CS_NOCLOSE);
 
