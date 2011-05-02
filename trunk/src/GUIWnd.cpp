@@ -53,7 +53,7 @@ char *GUIWnd::_szServer[3] =
 	"https://www.dsut-qa.online.nokia.com/oti/CareSuite?WSDL"
 };
 //////////////////////////////////////////////////////////////////////////
-//¼ÇÂ¼µ±Ç°ÎÄ¼şÁĞ±íÅÅĞòÊÇÉı»¹ÊÇ½µ
+//è®°å½•å½“å‰æ–‡ä»¶åˆ—è¡¨æ’åºæ˜¯å‡è¿˜æ˜¯é™
 bool gfsortUp = true;
 //////////////////////////////////////////////////////////////////////////
 void GUIWnd::init(HINSTANCE hinst, HWND hwndParent)
@@ -67,7 +67,7 @@ void GUIWnd::init(HINSTANCE hinst, HWND hwndParent)
 	}
 
 	_hWnd = createEx(WS_EX_ACCEPTFILES,
-		TEXT("NaviFirmExClass"), TEXT("NOKIA¹Ì¼şÏÂÔØÆ÷"),
+		TEXT("NaviFirmExClass"), TEXT("NOKIAå›ºä»¶ä¸‹è½½å™¨"),
 		WS_OVERLAPPEDWINDOW/* | WS_CLIPCHILDREN*/,			//WS_CLIPCHILDREN conflict with InvalidStatic
 		0, 0, 800, 480,
 		0, (LPVOID)this);
@@ -96,7 +96,7 @@ void GUIWnd::init(HINSTANCE hinst, HWND hwndParent)
 
 	ShowServer(_pConfig->getIndex());
 
-	//»¹Ô­×îºó¼ÇÂ¼´°¿ÚÎ»ÖÃ
+	//è¿˜åŸæœ€åè®°å½•çª—å£ä½ç½®
 	if (_pConfig->load())
 	{
 		Rect rect = _pConfig->getGUIRect();
@@ -120,8 +120,6 @@ void GUIWnd::init(HINSTANCE hinst, HWND hwndParent)
 	UpdateWindow();
 
 	LoadLanguage();
-
-	_hbmpProcess = LoadBitmap(_hinst, MAKEINTRESOURCE(IDB_PROCESS));
 
 	LoadSession();
 }
@@ -224,11 +222,11 @@ LRESULT CALLBACK GUIWnd::runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			vector<FileInfo>().swap(_vFiles);
 			_lvFile.DeleteAllItems();
 			//Mar. 20, 2011
-			//ĞŞÕıÍ¨¹ıCODEÏÂÔØÊ±Ã»¸üĞÂÏÔÊ¾
+			//ä¿®æ­£é€šè¿‡CODEä¸‹è½½æ—¶æ²¡æ›´æ–°æ˜¾ç¤º
 			_labelFiles.setText(TEXT("(0)"));
 			_hTreadGetFileList = CreateThread(0, 0, GetFileListByCodeProc, this, 0, NULL);
 			if (_hTreadGetFileList == INVALID_HANDLE_VALUE){
-				msgBox("ThreadErr", TEXT("´´½¨Ïß³ÌÊ±³ö´íÁË£¡"), TEXT("´íÎó"), MB_ICONERROR);
+				msgBox("ThreadErr", TEXT("åˆ›å»ºçº¿ç¨‹æ—¶å‡ºé”™äº†ï¼"), TEXT("é”™è¯¯"), MB_ICONERROR);
 			}else{
 				_status.Play();
 			}
@@ -321,9 +319,9 @@ LRESULT CALLBACK GUIWnd::runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 
 	case NM_DOWNFINISH:
-		sendMsg(NM_TASKBAR, 100);	//·ÀÖ¹ÈÎÎñ¹ÜÀí»ñÈ¡µÄ½ø¶È²»×¼µÄÇé¿ö
+		sendMsg(NM_TASKBAR, 100);	//é˜²æ­¢ä»»åŠ¡ç®¡ç†è·å–çš„è¿›åº¦ä¸å‡†çš„æƒ…å†µ
 		KillTimer(UPDATE_TIMER_ID);
-		UpdateStatus("Finish", TEXT("È«²¿ÏÂÔØÈÎÎñÒÑÍê³É"));
+		UpdateStatus("Finish", TEXT("å…¨éƒ¨ä¸‹è½½ä»»åŠ¡å·²å®Œæˆ"));
 		SetTimer(UPDATE_TIMER_ID, 5000);
 		break;
 
@@ -428,12 +426,12 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 
 	switch(id)
 	{
-	case IDM_SEL_ALL:	//È«Ñ¡/È¡ÏûÈ«Ñ¡
+	case IDM_SEL_ALL:	//å…¨é€‰/å–æ¶ˆå…¨é€‰
 	case IDM_SEL_NULL:
 		doSelAll(id == IDM_SEL_ALL);
 		break;
 
-	case IDM_COPY_CURRENT:	//¸´ÖÆÎÄ¼şURL
+	case IDM_COPY_CURRENT:	//å¤åˆ¶æ–‡ä»¶URL
 	case IDM_COPY_SELECTION:
 	case IDM_COPY_ALL:
 		doCopyUrl(id);
@@ -506,10 +504,10 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 			}
 			else
 			{
-				msgBox(NULL, TEXT("ÏêÏ¸ÇëµÇÂ½Èû°àÂÛÌ³£¬Á´½Ó£º\r\n")
+				msgBox(NULL, TEXT("è¯¦ç»†è¯·ç™»é™†å¡ç­è®ºå›ï¼Œé“¾æ¥ï¼š\r\n")
 					TEXT("http://bbs.dospy.com/thread-10732732-1-341-1.html\r\n")
-					TEXT("£¨¿É°´ÏÂCtrl+C¸´ÖÆĞÅÏ¢£©"),
-					TEXT("°ïÖú"),
+					TEXT("ï¼ˆå¯æŒ‰ä¸‹Ctrl+Cå¤åˆ¶ä¿¡æ¯ï¼‰"),
+					TEXT("å¸®åŠ©"),
 					MB_ICONINFORMATION
 					);
 			}
@@ -540,7 +538,7 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 		}
 		else
 		{
-			msgBox("TaskCon", TEXT("ÎŞÎÄ¼ş¿ÉÏÂÔØ£¡"), TEXT("¼ÌĞøÏÂÔØ"), MB_ICONINFORMATION);
+			msgBox("TaskCon", TEXT("æ— æ–‡ä»¶å¯ä¸‹è½½ï¼"), TEXT("ç»§ç»­ä¸‹è½½"), MB_ICONINFORMATION);
 		}
 
 		{
@@ -590,7 +588,7 @@ void GUIWnd::OnNotify(int id, NMHDR *pnmh)
 	case LVN_ITEMCHANGED:
 		for (size_t i=0; i<_lvFile.GetItemCount(); i++)
 		{
-			if (_lvFile.GetCheck(i))//ÓĞ´ò¹´Ê±ÏÂÔØ°´Å¥²Å¿ÉÓÃ
+			if (_lvFile.GetCheck(i))//æœ‰æ‰“å‹¾æ—¶ä¸‹è½½æŒ‰é’®æ‰å¯ç”¨
 			{
 				_btnDownload.enable();
 				return ;
@@ -599,7 +597,7 @@ void GUIWnd::OnNotify(int id, NMHDR *pnmh)
 		_btnDownload.disable();
 		break;
 
-	case LVN_COLUMNCLICK:	//µ¥»÷ÎÄ¼şÁĞ±íÊÓÍ¼Í·
+	case LVN_COLUMNCLICK:	//å•å‡»æ–‡ä»¶åˆ—è¡¨è§†å›¾å¤´
 		{
 			int whichItem = ((NMLISTVIEW *)pnmh)->iSubItem;
 			if (whichItem > 2)
@@ -618,7 +616,7 @@ void GUIWnd::OnNotify(int id, NMHDR *pnmh)
 				break;
 
 			TString strInfo;
-			strInfo.format(TEXT("Ãû³Æ£º%s\r\n´óĞ¡£º%s\r\nURL£º %s"),
+			strInfo.format(TEXT("åç§°ï¼š%s\r\nå¤§å°ï¼š%s\r\nURLï¼š %s"),
 				_vFiles[index].name.c_str(),					//name
 				MakeFileSizeFmt(_vFiles[index].size).c_str(),	//size
 				_vFiles[index].url.c_str());					//url
@@ -702,8 +700,8 @@ void GUIWnd::OnClose()
 					DlgConfirm confirm;
 
 					confirm.init(getHinst(), getSelf());
-					confirm.setTitle(TEXT("¹Ø±Õ³ÌĞò"));
-					confirm.setText(TEXT("»¹ÓĞÏÂÔØÈÎÎñÔÚ½øĞĞ£¬È·¶¨ÒªÖĞÖ¹ÏÂÔØ²¢ÍË³ö³ÌĞòÂğ£¿"));
+					confirm.setTitle(TEXT("å…³é—­ç¨‹åº"));
+					confirm.setText(TEXT("è¿˜æœ‰ä¸‹è½½ä»»åŠ¡åœ¨è¿›è¡Œï¼Œç¡®å®šè¦ä¸­æ­¢ä¸‹è½½å¹¶é€€å‡ºç¨‹åºå—ï¼Ÿ"));
 
 					SetConfirmLang(confirm, "Exit");
 
@@ -780,7 +778,7 @@ void GUIWnd::OnDestroy()
 		if (!_nvFile->empty())
 		{
 			TString nve = MakeFilePath(TEXT("task.nve"));
-			_nvFile->save(nve);	//È·±£ÄÜÕıÈ·±£´æ
+			_nvFile->save(nve);	//ç¡®ä¿èƒ½æ­£ç¡®ä¿å­˜
 		}
 
 		delete _nvFile;
@@ -808,7 +806,7 @@ void GUIWnd::OnDestroy()
 void GUIWnd::OnAboutClose(BOOL bNotEmpty, std::list<TiFile> &fileList)
 {
 	if (_nvFile){
-		_nvFile->clear();	//Ö®Ç°µÄÒªÊÍ·Åµô
+		_nvFile->clear();	//ä¹‹å‰çš„è¦é‡Šæ”¾æ‰
 	}else{
 		_nvFile = new NveFile;
 	}
@@ -878,7 +876,7 @@ void GUIWnd::doProductChange()
 	_lbVariant.ResetContent();
 	_lvFile.DeleteAllItems();
 
-	//Çå¿Õ²¢ÊÍ·Å¿Õ¼ä
+	//æ¸…ç©ºå¹¶é‡Šæ”¾ç©ºé—´
 	vector<Release>().swap(_vRelease);
 	list<Variant>().swap(_lVariant);
 	list<Variant>().swap(_lVariantFilter);
@@ -895,7 +893,7 @@ void GUIWnd::doProductChange()
 
 	_hThreadRelease = CreateThread(0, 0, GetReleaseListProc, this, 0, 0);
 	if (_hThreadRelease == INVALID_HANDLE_VALUE){
-		msgBox("ThreadErr", TEXT("´´½¨Ïß³Ì³ö´íÁË"), TEXT("´íÎó"), MB_ICONERROR);
+		msgBox("ThreadErr", TEXT("åˆ›å»ºçº¿ç¨‹å‡ºé”™äº†"), TEXT("é”™è¯¯"), MB_ICONERROR);
 	}else{
 		_status.Play();
 	}
@@ -925,7 +923,7 @@ void GUIWnd::doReleaseChange()
 	_hThreadVariant = CreateThread(0, 0, GetVariantListProc, this, 0, 0);
 
 	if (_hThreadVariant == INVALID_HANDLE_VALUE){
-		msgBox("ThreadErr", TEXT("GUIWnd::doReleaseChange: ´´½¨Ïß³Ì³ö´íÁË"), TEXT("Error"), MB_ICONERROR);
+		msgBox("ThreadErr", TEXT("GUIWnd::doReleaseChange: åˆ›å»ºçº¿ç¨‹å‡ºé”™äº†"), TEXT("Error"), MB_ICONERROR);
 	}else{
 		_status.Play();
 	}
@@ -973,13 +971,13 @@ void GUIWnd::doCopyUrl(UINT cmd)
 {
 	TString urlStr;
 
-	if (cmd == IDM_COPY_CURRENT)	//¸´ÖÆµ±Ç°Ñ¡ÖĞµÄÎÄ¼ş
+	if (cmd == IDM_COPY_CURRENT)	//å¤åˆ¶å½“å‰é€‰ä¸­çš„æ–‡ä»¶
 	{
 		int sel = _lvFile.GetSelectionMark();
 		if (sel >0 && sel < _vFiles.size())
 			urlStr = _vFiles[sel].url;
 	}
-	else if (cmd == IDM_COPY_SELECTION)	//´ò¹´
+	else if (cmd == IDM_COPY_SELECTION)	//æ‰“å‹¾
 	{
 		for (size_t i=0; i<_lvFile.GetItemCount(); i++)
 		{
@@ -988,7 +986,7 @@ void GUIWnd::doCopyUrl(UINT cmd)
 			}
 		}
 	}
-	else	//È«²¿
+	else	//å…¨éƒ¨
 	{
 		for (size_t i=0; i<_lvFile.GetItemCount(); i++){
 			urlStr += _vFiles[i].url + TEXT("\r\n");
@@ -998,9 +996,9 @@ void GUIWnd::doCopyUrl(UINT cmd)
 	if (!urlStr.empty())
 	{
 		if (!CopyTextToClipbrd(urlStr.c_str()))
-			msgBox("Clipbrd", TEXT("¸´ÖÆURLµ½¼ôÌù°åÊ§°Ü£¡"), TEXT("¸´ÖÆURL"), MB_ICONERROR);
+			msgBox("Clipbrd", TEXT("å¤åˆ¶URLåˆ°å‰ªè´´æ¿å¤±è´¥ï¼"), TEXT("å¤åˆ¶URL"), MB_ICONERROR);
 		else
-			UpdateStatus("CopyUrl", TEXT("³É¹¦¸´ÖÆURLµ½ÏµÍ³¼ôÌù°å"));
+			UpdateStatus("CopyUrl", TEXT("æˆåŠŸå¤åˆ¶URLåˆ°ç³»ç»Ÿå‰ªè´´æ¿"));
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -1029,8 +1027,8 @@ void GUIWnd::doRefresh(bool fNeedACK/* = true*/)
 	if (fNeedACK)
 	{
 		if (
-			msgBox("Refresh", TEXT("È·¶¨ÒªË¢ĞÂ²úÆ·Âğ£¿Õâ½«Çå¿ÕËùÓĞ»º´æÎÄ¼ş£¡"),
-				TEXT("ÇëÈ·ÈÏ"), MB_ICONQUESTION | MB_YESNO) == IDNO
+			msgBox("Refresh", TEXT("ç¡®å®šè¦åˆ·æ–°äº§å“å—ï¼Ÿè¿™å°†æ¸…ç©ºæ‰€æœ‰ç¼“å­˜æ–‡ä»¶ï¼"),
+				TEXT("è¯·ç¡®è®¤"), MB_ICONQUESTION | MB_YESNO) == IDNO
 			)
 			return ;
 	}
@@ -1079,7 +1077,7 @@ void GUIWnd::doRefresh(bool fNeedACK/* = true*/)
 	_hThreadProduct = CreateThread(0, 0, GetProductListProc, this, NULL, NULL);
 
 	if (_hThreadProduct == INVALID_HANDLE_VALUE){
-		msgBox("ThreadErr", TEXT("ÎŞ·¨´´½¨»ñÈ¡²úÆ·Ïß³Ì£¡£¡"), TEXT("³ö´íÁË"), MB_ICONERROR);
+		msgBox("ThreadErr", TEXT("æ— æ³•åˆ›å»ºè·å–äº§å“çº¿ç¨‹ï¼ï¼"), TEXT("å‡ºé”™äº†"), MB_ICONERROR);
 	}else{
 		_status.Play();
 	}
@@ -1091,7 +1089,7 @@ DWORD WINAPI GUIWnd::GetProductListProc(LPVOID lParam)
 
 	if (!pWnd)
 	{
-		MessageBox(0, TEXT("GUIWnd::GetProductListProc: ÎŞĞ§´«µİ"), TEXT("Error"), MB_ICONERROR);
+		MessageBox(0, TEXT("GUIWnd::GetProductListProc: æ— æ•ˆä¼ é€’"), TEXT("Error"), MB_ICONERROR);
 		return 0;
 	}
 
@@ -1123,7 +1121,7 @@ back:
 	}
 	else
 	{
-		pWnd->UpdateStatus("ReadCache", TEXT("ÕıÔÚ¶ÁÈ¡»º´æÎÄ¼ş¡­¡­"));
+		pWnd->UpdateStatus("ReadCache", TEXT("æ­£åœ¨è¯»å–ç¼“å­˜æ–‡ä»¶â€¦â€¦"));
 
 		data = GetFileDataFromZip(productFile, TEXT("products.xml"), dwSize);
 		if (!data)
@@ -1146,7 +1144,7 @@ _exit:
 	if (pWnd->_lProduct.empty()){
 		pWnd->_lbProduct.AddString(TEXT("<null>"));
 	}
-	pWnd->UpdateStatus("EndProductThread", TEXT("½áÊø»ñÈ¡²úÆ·ÁĞ±í¡­¡­"));
+	pWnd->UpdateStatus("EndProductThread", TEXT("ç»“æŸè·å–äº§å“åˆ—è¡¨â€¦â€¦"));
 	pWnd->SetTimer(UPDATE_TIMER_ID, 3000);
 
 	PostMessage(pWnd->getSelf(), NM_ENDTHREAD, 0, (LPARAM)(&(pWnd->_hThreadProduct)));
@@ -1175,11 +1173,11 @@ int GUIWnd::ReadProduct(const char *data, DWORD dwSize)
 
 	if (IsErrorInfo(pXmlDoc, errInfo))
 	{
-		UpdateStatus(NULL, TEXT("»ñÈ¡²úÆ·ÁĞ±íÊ§°Ü"));
+		UpdateStatus(NULL, TEXT("è·å–äº§å“åˆ—è¡¨å¤±è´¥"));
 
 		LangHelper lang;
-		TString text = TEXT("»ñÈ¡²úÆ·ÁĞ±íÊ±·¢Éú´íÎó£¬·şÎñÆ÷·µ»ØĞÅÏ¢£º");
-		TString title = TEXT("»ñÈ¡²úÆ·ÁĞ±íÊ§°Ü");
+		TString text = TEXT("è·å–äº§å“åˆ—è¡¨æ—¶å‘ç”Ÿé”™è¯¯ï¼ŒæœåŠ¡å™¨è¿”å›ä¿¡æ¯ï¼š");
+		TString title = TEXT("è·å–äº§å“åˆ—è¡¨å¤±è´¥");
 		if (PrepareLang(lang)){
 			lang.GetMsgBox("ServerErr_Product", text, title);
 		}
@@ -1190,7 +1188,7 @@ int GUIWnd::ReadProduct(const char *data, DWORD dwSize)
 		goto _exit;
 	}
 
-	//²»´æÔÚCacheÎÄ¼ş¼Ğ
+	//ä¸å­˜åœ¨Cacheæ–‡ä»¶å¤¹
 	if (!PathFileExists(cacheFolder)){
 		File::MakeDir(cacheFolder);
 	}
@@ -1214,7 +1212,7 @@ int GUIWnd::ReadProduct(const char *data, DWORD dwSize)
 
 	TiXmlNode *nodeProduct = nodeResult->FirstChild("product");
 
-	UpdateStatus("Parsing", TEXT("ÕıÔÚ·ÖÎö·µ»ØÊı¾İ¡­¡­"));
+	UpdateStatus("Parsing", TEXT("æ­£åœ¨åˆ†æè¿”å›æ•°æ®â€¦â€¦"));
 
 	for (; nodeProduct; nodeProduct = nodeProduct->NextSibling()){
 		GetProductInfo(nodeProduct);
@@ -1252,7 +1250,7 @@ void GUIWnd::GetProductInfo(TiXmlNode *node)
 	if (node)
 	{
 		node = node->FirstChild("file");
-		//Ñ°ÕÒÓĞ.zipµÄURL
+		//å¯»æ‰¾æœ‰.zipçš„URL
 		for (; node; node = node->NextSibling())
 		{
 			value = GetChildElementText(node, "fileName");
@@ -1269,7 +1267,7 @@ void GUIWnd::GetProductInfo(TiXmlNode *node)
 		}
 	}
 
-	//²»ÄÜÁ½Õß½Ô¿Õ
+	//ä¸èƒ½ä¸¤è€…çš†ç©º
 	if (!product.type.empty() && !product.name.empty()){
 		_lProduct.push_back(product);
 	}
@@ -1288,7 +1286,7 @@ DWORD WINAPI GUIWnd::GetReleaseListProc(LPVOID lParam)
 
 	if (pWnd->_hTreadGetImage != INVALID_HANDLE_VALUE)
 	{
-		pWnd->UpdateStatus("WaitPic", TEXT("µÈ´ıÍ¼Æ¬ÏÂÔØ¡­¡­"));
+		pWnd->UpdateStatus("WaitPic", TEXT("ç­‰å¾…å›¾ç‰‡ä¸‹è½½â€¦â€¦"));
 
 		WaitForSingleObject(pWnd->_hTreadGetImage, 5000);
 		CloseHandle(pWnd->_hTreadGetImage);
@@ -1342,7 +1340,7 @@ _exit:
 	if (fNeedClear && data)
 		delete [] data;
 
-	pWnd->UpdateStatus("EndReleaseThread", TEXT("½áÊø»ñÈ¡·¢ĞĞ°æ±¾ÁĞ±í¡­¡­"));
+	pWnd->UpdateStatus("EndReleaseThread", TEXT("ç»“æŸè·å–å‘è¡Œç‰ˆæœ¬åˆ—è¡¨â€¦â€¦"));
 
 	pWnd->SetTimer(UPDATE_TIMER_ID, 5000);
 
@@ -1373,11 +1371,11 @@ int GUIWnd::ReadRelease(const char *data, DWORD dwSize, const TString &productID
 
 	if (IsErrorInfo(pXmlDoc, errInfo))
 	{
-		UpdateStatus(NULL, TEXT("»ñÈ¡·¢ĞĞ°æ±¾ÁĞ±íÊ§°Ü"));
+		UpdateStatus(NULL, TEXT("è·å–å‘è¡Œç‰ˆæœ¬åˆ—è¡¨å¤±è´¥"));
 
 		LangHelper lang;
-		TString text = TEXT("»ñÈ¡·¢ĞĞ°æ±¾ÁĞ±íÊ±·¢Éú´íÎó£¬·şÎñÆ÷·µ»ØĞÅÏ¢£º");
-		TString title = TEXT("»ñÈ¡·¢ĞĞ°æ±¾ÁĞ±íÊ§°Ü");
+		TString text = TEXT("è·å–å‘è¡Œç‰ˆæœ¬åˆ—è¡¨æ—¶å‘ç”Ÿé”™è¯¯ï¼ŒæœåŠ¡å™¨è¿”å›ä¿¡æ¯ï¼š");
+		TString title = TEXT("è·å–å‘è¡Œç‰ˆæœ¬åˆ—è¡¨å¤±è´¥");
 		if (PrepareLang(lang)){
 			lang.GetMsgBox("ServerErr_Release", text, title);
 		}
@@ -1411,7 +1409,7 @@ int GUIWnd::ReadRelease(const char *data, DWORD dwSize, const TString &productID
 
 	TiXmlNode *nodeRelease = nodeResult->FirstChild("release");
 
-	UpdateStatus("Parsing", TEXT("ÕıÔÚ·ÖÎö·µ»ØÊı¾İ¡­¡­"));
+	UpdateStatus("Parsing", TEXT("æ­£åœ¨åˆ†æè¿”å›æ•°æ®â€¦â€¦"));
 
 	for (; nodeRelease; nodeRelease = nodeRelease->NextSibling()){
 		GetReleaseInfo(nodeRelease);
@@ -1502,7 +1500,7 @@ _exit:
 	if (fNeedClear && data)
 		delete [] data;
 
-	pWnd->UpdateStatus("EndVariantThread", TEXT("½áÊø»ñÈ¡CODEÁĞ±í¡­¡­"));
+	pWnd->UpdateStatus("EndVariantThread", TEXT("ç»“æŸè·å–CODEåˆ—è¡¨â€¦â€¦"));
 	pWnd->SetTimer(UPDATE_TIMER_ID, 5000);
 	pWnd->_status.Pause();
 	PostMessage(pWnd->getSelf(), NM_ENDTHREAD, 0, reinterpret_cast<LPARAM>(&(pWnd->_hThreadVariant)));
@@ -1529,11 +1527,11 @@ int GUIWnd::ReadVariant(const char *data, DWORD dwSize, const TString &releaseID
 
 	if (IsErrorInfo(pXmlDoc, errInfo))
 	{
-		UpdateStatus(NULL, TEXT("»ñÈ¡CODEÁĞ±íÊ§°Ü"));
+		UpdateStatus(NULL, TEXT("è·å–CODEåˆ—è¡¨å¤±è´¥"));
 
 		LangHelper lang;
-		TString text = TEXT("»ñÈ¡CODEÁĞ±íÊ±·¢Éú´íÎó£¬·şÎñÆ÷·µ»ØĞÅÏ¢£º");
-		TString title = TEXT("»ñÈ¡CODEÁĞ±íÊ§°Ü");
+		TString text = TEXT("è·å–CODEåˆ—è¡¨æ—¶å‘ç”Ÿé”™è¯¯ï¼ŒæœåŠ¡å™¨è¿”å›ä¿¡æ¯ï¼š");
+		TString title = TEXT("è·å–CODEåˆ—è¡¨å¤±è´¥");
 		if (PrepareLang(lang)){
 			lang.GetMsgBox("ServerErr_Variant", text, title);
 		}
@@ -1568,7 +1566,7 @@ int GUIWnd::ReadVariant(const char *data, DWORD dwSize, const TString &releaseID
 
 	TiXmlNode *nodeVariant = nodeResult->FirstChild("variant");
 
-	UpdateStatus("Parsing", TEXT("ÕıÔÚ·ÖÎö·µ»ØÊı¾İ¡­¡­"));
+	UpdateStatus("Parsing", TEXT("æ­£åœ¨åˆ†æè¿”å›æ•°æ®â€¦â€¦"));
 
 	for (; nodeVariant; nodeVariant = nodeVariant->NextSibling()){
 		GetVariantInfo(nodeVariant, bodyNode);
@@ -2007,7 +2005,7 @@ void GUIWnd::DownloadImage(const TString &url, const TString &fileSave)
 	{
 		GetZipItem(hZip, i, &ze);
 
-		//Ö»ÈÏµÚÒ»ÕÅÕÒµ½µÄ£¡
+		//åªè®¤ç¬¬ä¸€å¼ æ‰¾åˆ°çš„ï¼
 		if (StrStrI(ze.name, TEXT(".png")) != 0)
 		{
 			if (UnzipItem(hZip, i, fileSave.c_str()) == ZR_OK)
@@ -2113,7 +2111,7 @@ void GUIWnd::ExportProductToText()
 	if (!productData.empty())
 	{
 		if (!SaveExportText(TEXT("Products.txt"), productData))
-			msgBox("ExportTxt", TEXT("±£´æÎÄ¼şÊ§°Ü£¡£¡"), TEXT("µ¼³öÎÄ±¾"), MB_ICONERROR);
+			msgBox("ExportTxt", TEXT("ä¿å­˜æ–‡ä»¶å¤±è´¥ï¼ï¼"), TEXT("å¯¼å‡ºæ–‡æœ¬"), MB_ICONERROR);
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -2204,7 +2202,7 @@ void GUIWnd::ExportVariantToText()
 	if (!productData.empty())
 	{
 		if (!SaveExportText(TEXT("Variants.txt"), productData))
-			msgBox("ExportTxt", TEXT("±£´æÎÄ¼şÊ§°Ü£¡£¡"), TEXT("µ¼³öÎÄ±¾"), MB_ICONERROR);
+			msgBox("ExportTxt", TEXT("ä¿å­˜æ–‡ä»¶å¤±è´¥ï¼ï¼"), TEXT("å¯¼å‡ºæ–‡æœ¬"), MB_ICONERROR);
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -2283,7 +2281,7 @@ TString GUIWnd::SelectFilePath(const TString &defName)
 	ofn.nMaxFile 	= MAX_PATH;
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.lpstrFilter = TEXT("All files(*.*)\0*.*\0\0");
-	ofn.lpstrTitle 	= TEXT("±£´æÎÄ¼ş");
+	ofn.lpstrTitle 	= TEXT("ä¿å­˜æ–‡ä»¶");
 
 	if (GetSaveFileName(&ofn))
 		return filePath;
@@ -2326,7 +2324,7 @@ DWORD WINAPI GUIWnd::GetFileListByCodeProc(LPVOID lParam)
 	pWnd->ShowFiles();
 
 _exit:
-	pWnd->UpdateStatus("EndCodeThread", TEXT("½áÊø»ñÈ¡Ö¸¶¨CODEÎÄ¼şÁĞ±íÏß³Ì¡­¡­"));
+	pWnd->UpdateStatus("EndCodeThread", TEXT("ç»“æŸè·å–æŒ‡å®šCODEæ–‡ä»¶åˆ—è¡¨çº¿ç¨‹â€¦â€¦"));
 	pWnd->SetTimer(UPDATE_TIMER_ID, 3000);
 	pWnd->_status.Pause();
 	PostMessage(pWnd->getSelf(), NM_ENDTHREAD, 0, reinterpret_cast<LPARAM>(&(pWnd->_hTreadGetFileList)));
@@ -2388,7 +2386,7 @@ TString GUIWnd::GetSessionID()
 	}
 
 	session.clear();
-	//ÓÉÓÚJSESSIONID¾ù×ÖÄ¸Êı×Ö£¬¾Í²»ÓÃ×ª»»ÁË
+	//ç”±äºJSESSIONIDå‡å­—æ¯æ•°å­—ï¼Œå°±ä¸ç”¨è½¬æ¢äº†
 	while (*p && *p != ';')
 	{
 		session.push_back(*p);
@@ -2412,11 +2410,11 @@ void GUIWnd::VariantDataToFiles(const char *data)
 	
 	if (IsErrorInfo(pXmlDoc, errInfo))
 	{
-		UpdateStatus(NULL, TEXT("»ñÈ¡ÁĞ±íÊ§°Ü£¬Çë¼ì²éÊäÈëµÄCODEÊÇ·ñÕıÈ·¡£¡£¡£"));
+		UpdateStatus(NULL, TEXT("è·å–åˆ—è¡¨å¤±è´¥ï¼Œè¯·æ£€æŸ¥è¾“å…¥çš„CODEæ˜¯å¦æ­£ç¡®ã€‚ã€‚ã€‚"));
 
 		LangHelper lang;
-		TString text = TEXT("»ñÈ¡ÎÄ¼şÁĞ±íÊ±·¢Éú´íÎó£¬Çë¼ì²éCODEÊÇ·ñÕıÈ·¡£·şÎñÆ÷·µ»ØĞÅÏ¢£º");
-		TString title = TEXT("»ñÈ¡ÁĞ±íÊ§°Ü");
+		TString text = TEXT("è·å–æ–‡ä»¶åˆ—è¡¨æ—¶å‘ç”Ÿé”™è¯¯ï¼Œè¯·æ£€æŸ¥CODEæ˜¯å¦æ­£ç¡®ã€‚æœåŠ¡å™¨è¿”å›ä¿¡æ¯ï¼š");
+		TString title = TEXT("è·å–åˆ—è¡¨å¤±è´¥");
 		if (PrepareLang(lang)){
 			lang.GetMsgBox("ServerErr_Code", text, title);
 		}
@@ -2449,7 +2447,7 @@ void GUIWnd::VariantDataToFiles(const char *data)
 
 	TiXmlNode *file = nodeFiles->FirstChild("file");
 
-	UpdateStatus("Parsing", TEXT("ÕıÔÚ·ÖÎö·µ»ØÊı¾İ¡­¡­"));
+	UpdateStatus("Parsing", TEXT("æ­£åœ¨åˆ†æè¿”å›æ•°æ®â€¦â€¦"));
 
 	for (; file; file = file->NextSibling())
 	{
@@ -2490,10 +2488,10 @@ TString GUIWnd::GetFileElement(TiXmlNode *fileNode, const char *tagName, TiXmlNo
 			valueStr = value;
 		}
 		else if (StrCmpIA(tagName, "downloadURL") == 0 && bodyNode)
-		{	//<downloadURL href="#ID_11" /> ÀàĞÍ
+		{	//<downloadURL href="#ID_11" /> ç±»å‹
 			const char *id = element->Attribute("href");
 			if (id){
-				valueStr = GetFileUrlByID(bodyNode, ++id);	//È¥µô#
+				valueStr = GetFileUrlByID(bodyNode, ++id);	//å»æ‰#
 			}
 		}
 	}
@@ -2524,7 +2522,10 @@ void GUIWnd::ShowFiles()
 	_lvFile.DeleteAllItems();
 
 	if (_vFiles.empty())
+	{
+		_btnDownload.disable();
 		return ;
+	}
 
 	LVITEM lvi = {0};
 
@@ -2651,7 +2652,7 @@ void GUIWnd::ShowServer(int index /* = 1 */)
 	UpdateStatus(NULL, szServer[index], 3);
 }
 //////////////////////////////////////////////////////////////////////////
-//ÎÄ¼şÁĞ±íÅÅĞò
+//æ–‡ä»¶åˆ—è¡¨æ’åº
 //////////////////////////////////////////////////////////////////////////
 bool file_sort_by_name(const FileInfo &lhs, const FileInfo &rhs)
 {
@@ -2684,7 +2685,7 @@ void GUIWnd::SortListItem(int index)
 	{
 		if (i == index)
 		{
-			if (_sortIndex != index)	//ÒªÅÅĞòµÄÁĞ
+			if (_sortIndex != index)	//è¦æ’åºçš„åˆ—
 			{
 				hdi.fmt = HDF_SORTUP | HDF_STRING;
 				gfsortUp = true;
@@ -2692,7 +2693,7 @@ void GUIWnd::SortListItem(int index)
 				_sortIndex = index;
 				_sortType = SORT_UP;
 			}
-			else		//ÒÑ±ê¼ÇÅÅĞòÁĞ
+			else		//å·²æ ‡è®°æ’åºåˆ—
 			{
 				if (_sortType == SORT_UP)
 				{
@@ -2852,7 +2853,7 @@ char* GUIWnd::GetSoap(Http& http, LPCTSTR lpPost, LPDWORD pdwSize)
 {
 	if (!http.Init(true, AGENT_NAME))
 	{
-		UpdateStatus(NULL, TEXT("LibCurl³õÊ¼»¯³ö´íÁË£¡"));
+		UpdateStatus(NULL, TEXT("LibCurlåˆå§‹åŒ–å‡ºé”™äº†ï¼"));
 		return 0;
 	}
 
@@ -2865,7 +2866,7 @@ char* GUIWnd::GetSoap(Http& http, LPCTSTR lpPost, LPDWORD pdwSize)
 
 	ASSERT_SERVER_INDEX(index);
 
-	UpdateStatus("Connecting", TEXT("ÕıÔÚÁ¬½Ó·şÎñÆ÷»ñÈ¡Êı¾İ¡­¡­"));
+	UpdateStatus("Connecting", TEXT("æ­£åœ¨è¿æ¥æœåŠ¡å™¨è·å–æ•°æ®â€¦â€¦"));
 
 	http.ShowProgress(WebProgress, this);
 #ifdef UNICODE
@@ -2884,14 +2885,14 @@ TString GUIWnd::TryGetSessionID()
 
 	if (session.empty())
 	{
-		UpdateStatus("GetSID", TEXT("³¢ÊÔ»ñÈ¡SessionID..."));
+		UpdateStatus("GetSID", TEXT("å°è¯•è·å–SessionID..."));
 		session = GetSessionID();
 	}
 
 	if (session.empty())
 	{
-		msgBox("SID", TEXT("ÎŞ·¨»ñÈ¡ÓĞĞ§Éí·İÑéÖ¤ID£¬ÇëÉÔºóÔÙ³¢ÊÔ£¡\r\n"),
-			TEXT("³ö´í"), MB_ICONERROR);
+		msgBox("SID", TEXT("æ— æ³•è·å–æœ‰æ•ˆèº«ä»½éªŒè¯IDï¼Œè¯·ç¨åå†å°è¯•ï¼\r\n"),
+			TEXT("å‡ºé”™"), MB_ICONERROR);
 	}
 
 	return session;
@@ -2918,7 +2919,7 @@ void GUIWnd::WebProgress(double total, double now, void* pGuiWnd)
 //////////////////////////////////////////////////////////////////////////
 void GUIWnd::ValidTaskMgr()
 {
-	//Î´´´½¨¹ı
+	//æœªåˆ›å»ºè¿‡
 	if (_taskMgr == NULL)
 	{
 		try
@@ -2979,7 +2980,7 @@ void GUIWnd::ShowIndeterminateProgress(bool fShow /* = true */)
 	}
 
 	if (_fDownloading){
-		return ;	//ÕıÔÚÏÂÔØÊ±²»Æğ×÷ÓÃ
+		return ;	//æ­£åœ¨ä¸‹è½½æ—¶ä¸èµ·ä½œç”¨
 	}
 
 	if (!_pTaskbar){
@@ -3100,11 +3101,11 @@ void GUIWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvColumn.fmt = LVCFMT_LEFT;
 
-	lvColumn.pszText = TEXT("ÎÄ¼şÃû");
+	lvColumn.pszText = TEXT("æ–‡ä»¶å");
 	lvColumn.cx = 150;
 	_lvFile.InsertColumn(0, &lvColumn);
 
-	lvColumn.pszText = TEXT("´óĞ¡");
+	lvColumn.pszText = TEXT("å¤§å°");
 	lvColumn.cx = 70;
 	_lvFile.InsertColumn(1, &lvColumn);
 
@@ -3130,7 +3131,7 @@ void GUIWnd::OnSize(int nWidth, int nHeight)
 	int width = nWidth*27/100;
 
 	int xSpace = (nWidth - width*3 - width/2 - 20)/3;
-	//±ÜÃâ¿ÕÏ¶¹ı´ó
+	//é¿å…ç©ºéš™è¿‡å¤§
 	if (xSpace > 9)
 	{
 		width += xSpace - 9;
@@ -3190,7 +3191,7 @@ void GUIWnd::LoadSession()
 	 _hThreadProduct = CreateThread(0, 0, GetProductListProc, this, 0, 0);
 
  	if (_hThreadProduct == INVALID_HANDLE_VALUE){
- 		msgBox("ThreadErr", TEXT("GUIWnd::OnInit: ´´½¨Ïß³Ì³ö´íÁË"), TEXT("Error"), MB_ICONERROR);
+ 		msgBox("ThreadErr", TEXT("GUIWnd::OnInit: åˆ›å»ºçº¿ç¨‹å‡ºé”™äº†"), TEXT("Error"), MB_ICONERROR);
  	}else{
 		_status.Play();
 	}
@@ -3211,8 +3212,8 @@ void GUIWnd::LoadSession()
 
 					confirm.init(getHinst(), getSelf());
 
-					confirm.setTitle(TEXT("¼ÌĞøÏÂÔØ"));
-					confirm.setText(TEXT("ÊÇ·ñ¼ÌĞøÏÂÔØÉÏ´ÎÎ´Íê³ÉµÄÈÎÎñ£¿"));
+					confirm.setTitle(TEXT("ç»§ç»­ä¸‹è½½"));
+					confirm.setText(TEXT("æ˜¯å¦ç»§ç»­ä¸‹è½½ä¸Šæ¬¡æœªå®Œæˆçš„ä»»åŠ¡ï¼Ÿ"));
 
 					SetConfirmLang(confirm, "Task");
 
@@ -3249,7 +3250,7 @@ void GUIWnd::LoadSession()
 			{
 				HMENU hMenu = GetMenu();
 				hMenu = GetSubMenu(hMenu, 0);
-				InsertMenu(hMenu, 2, MF_BYPOSITION | MF_BYCOMMAND, IDM_DOWN_CONTINUE, TEXT("¼ÌĞøÏÂÔØ(&G)"));
+				InsertMenu(hMenu, 2, MF_BYPOSITION | MF_BYCOMMAND, IDM_DOWN_CONTINUE, TEXT("ç»§ç»­ä¸‹è½½(&G)"));
 				InsertMenu(hMenu, 3, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 
 				if (_curLangIndex != -1 && _vLang.size() > 0 && _curLangIndex < _vLang.size())
@@ -3270,22 +3271,22 @@ void GUIWnd::LoadSession()
 void GUIWnd::CreateControls()
 {
 	_labelProducts.init(_hinst, _hWnd);
-	_labelProducts.create(TEXT("²úÆ·ĞÍºÅ£º"));
+	_labelProducts.create(TEXT("äº§å“å‹å·ï¼š"));
 	_labelProductsCount.init(_hinst, _hWnd);
 	_labelProductsCount.create(TEXT("(0/0)"));
 
 	_labelReleases.init(_hinst, _hWnd);
-	_labelReleases.create(TEXT("·¢²¼°æ±¾£º"));
+	_labelReleases.create(TEXT("å‘å¸ƒç‰ˆæœ¬ï¼š"));
 	_labelReleasesCount.init(_hinst, _hWnd);
 	_labelReleasesCount.create(TEXT("(0)"));
 
 	_labelVariants.init(_hinst, _hWnd);
-	_labelVariants.create(TEXT("CODE£º"));
+	_labelVariants.create(TEXT("CODEï¼š"));
 	_labelVariantsCount.init(_hinst, _hWnd);
 	_labelVariantsCount.create(TEXT("(0/0)"));
 
 	_labelFiles.init(_hinst, _hWnd);
-	_labelFiles.create(TEXT("ÎÄ¼şÁĞ±í£º"));
+	_labelFiles.create(TEXT("æ–‡ä»¶åˆ—è¡¨ï¼š"));
 	_labelFilesCount.init(_hinst, _hWnd);
 	_labelFilesCount.create(TEXT("(0)"));
 
@@ -3319,7 +3320,7 @@ void GUIWnd::CreateControls()
 	_edVariant.create(NULL);
 
 	_btnDownload.init(_hinst, _hWnd);
-	_btnDownload.create(TEXT("Ìí¼Óµ½ÏÂÔØÈÎÎñ"));
+	_btnDownload.create(TEXT("æ·»åŠ åˆ°ä¸‹è½½ä»»åŠ¡"));
 	_btnDownload.disable();
 }
 
