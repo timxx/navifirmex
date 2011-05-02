@@ -159,24 +159,16 @@ public:
 	}
 
 public:
-	virtual HWND create(LPCTSTR lpTitle = TEXT("Static"), HWND hwndParent = NULL,
-		int id = -1, int nWidth = 0, int nHeight = 0,
-		int x =0 , int y = 0, DWORD dwStyle = WS_TABSTOP)
+	virtual HWND create(LPCTSTR lpTitle = TEXT("Static"))
 	{
-		_id = id;
-		if(hwndParent != NULL){
-			_parentWnd = hwndParent;
-		}
-
 		_hWnd = Window::createEx(WS_EX_TRANSPARENT, TEXT("Static"),
-			lpTitle, dwStyle | WS_VISIBLE | WS_CHILD, x, y, nWidth, nHeight, id);
+			lpTitle, _dwStyle | WS_VISIBLE | WS_CHILD, _x, _y, _width, _height, _id);
 		return _hWnd;
 	}
 
 	void clear(){
 		setText(TEXT(""));
 	}
-
 };
 
 class ComboBox : public ControlBase
@@ -287,14 +279,12 @@ public:
 	inline BOOL DeleteAllItems()		{	return ListView_DeleteAllItems(_hWnd);		}
 	inline BOOL DeleteItem(int iItem)	{	return ListView_DeleteItem(_hWnd, iItem);	}
 
-	inline int GetTopIndex()		{	return ListView_GetTopIndex(_hWnd);		}
-	inline int GetCountPerPage()	{	return ListView_GetCountPerPage(_hWnd);	}
-	inline int  GetHotItem() const			{	return ListView_GetHotItem(_hWnd);		}
-	inline BOOL GetItem(LPLVITEM pitem)	{	return ListView_GetItem(_hWnd, pitem);	}
-	inline UINT GetItemState(int i, UINT mask) {
-		return ListView_GetItemState(_hWnd, i, mask);
-	}
-	inline int  GetItemCount() const		{	return ListView_GetItemCount(_hWnd);	}
+	inline int GetTopIndex()			{	return ListView_GetTopIndex(_hWnd);		}
+	inline int GetCountPerPage()		{	return ListView_GetCountPerPage(_hWnd);	}
+	inline int  GetHotItem() const		{	return ListView_GetHotItem(_hWnd);		}
+	inline BOOL GetItem(LPLVITEM pitem)			{	return ListView_GetItem(_hWnd, pitem);	}
+	inline UINT GetItemState(int i, UINT mask)	{	return ListView_GetItemState(_hWnd, i, mask);}
+	inline int  GetItemCount() const			{	return ListView_GetItemCount(_hWnd);	}
 
 	inline BOOL GetSubItemRect(int iItem, int iSubItem, int code, LPRECT lpRect){
 		return ListView_GetSubItemRect(_hWnd, iItem, iSubItem, code, lpRect);
@@ -305,11 +295,10 @@ public:
 	}
 	int GetSelectedColumn() const	{	return ListView_GetSelectedColumn(_hWnd);	}
 	int GetSelectionMark() const	{	return ListView_GetSelectionMark(_hWnd);	}
-	int GetSelectedCount() const	{ return ListView_GetSelectedCount(_hWnd);	}
+	int GetSelectedCount() const	{	return ListView_GetSelectedCount(_hWnd);	}
 
-	inline BOOL GetItemRect(int i, RECT *prc, int code){
-		return ListView_GetItemRect(_hWnd, i, prc, code);
-	}
+	inline BOOL GetItemRect(int i, RECT *prc, int code)	{	return ListView_GetItemRect(_hWnd, i, prc, code);	}
+	BOOL GetColumn(int iCol, LPLVCOLUMN pcol)			{	return ListView_GetColumn(_hWnd, iCol, pcol);		}
 
 	int InsertItem(const LPLVITEM pitem)	{	return ListView_InsertItem(_hWnd, pitem);	}
 	int InsertItem(int iItem, LPTSTR lpszItem)
@@ -322,6 +311,16 @@ public:
 
 		return InsertItem(&lvi);
 	}
+	BOOL SetColumn(int iCol, LPLVCOLUMN pcol)	{	return ListView_SetColumn(_hWnd, iCol, pcol);	}
+	BOOL SetColumnText(int iCol, const TString &text)
+	{
+		LVCOLUMN lvc = {0};
+		lvc.mask = LVCF_TEXT;
+		lvc.pszText = (TCHAR*)text.c_str();
+
+		return SetColumn(iCol, &lvc);
+	}
+
 	BOOL SetItem(const LPLVITEM pitem)		{	return ListView_SetItem(_hWnd, pitem);		}
 
 	void SetItemText(int iItem, int iSubItem, LPTSTR pszText)

@@ -33,7 +33,7 @@ public:
 		fPrompt = _fPrompt;
 		return _fYes;
 	}
-	//call before create dialog
+	//call before creating dialog
 	void setText(LPCTSTR lpText){
 		_infoText = lpText;
 	}

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "nm_message.h"
 #include "common.h"
 #include "Tim\File.h"
+#include "LangHelper.h"
 
 using namespace Tim;
 
@@ -57,7 +58,7 @@ void DlgNewTask::OnInit()
 	_ctlSelReverse.init(getHinst(), getSelf());
 
 	_ctlSelAll.create(HwndFromId(IDS_SEL_ALL), IDS_SEL_ALL);
-	_ctlSelReverse.create(HwndFromId(IDS_SEL_REVERSE), IDS_SEL_REVERSE);
+	_ctlSelReverse.create(HwndFromId(IDS_SEL_INVERSE), IDS_SEL_INVERSE);
 
 	_taskList.SetExtendedStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
 
@@ -176,7 +177,7 @@ void DlgNewTask::OnCommand(UINT id)
 		break;
 
 	case IDS_SEL_ALL:
-	case IDS_SEL_REVERSE:
+	case IDS_SEL_INVERSE:
 		doSelection(id == IDS_SEL_ALL);
 		break;
 	}
@@ -215,7 +216,25 @@ void DlgNewTask::DownNow()
 
 	if (folder.empty())
 	{
-		msgBox(TEXT("您必须选择一个存放的目录！"), TEXT("提醒"), MB_ICONINFORMATION);
+		//msgBox(TEXT("您必须选择一个存放的目录！"), TEXT("提醒"), MB_ICONINFORMATION);
+		LangHelper lang;
+
+		TCHAR szLang[MAX_PATH] = {0};
+
+		SendMessage(getParent(), NM_GETLANGPATH, 0, reinterpret_cast<LPARAM>(szLang));
+
+		TString text = TEXT("您必须选择一个存放的目录！");
+		TString title = TEXT("提醒");
+
+		if (szLang[0])
+		{
+			if (lang.Load(szLang)){
+				lang.GetMsgBox("EmptyDir", text, title);
+			}
+		}
+
+		Window::msgBox(text, title, MB_ICONINFORMATION);
+
 		return ;
 	}
 
@@ -268,4 +287,26 @@ void DlgNewTask::DownNow()
 	}
 
 	postMsg(WM_CLOSE);
+}
+
+void DlgNewTask::ResizeLabels()
+{
+	HDC hdc = GetDC(_hWnd);
+	SIZE size;
+	Rect rect;
+	//HGDIOBJ hOldObj = SelectObject(hdc, DEFAULT_GUI_FONT);
+
+	TString text = _ctlSelAll.getText();
+
+	GetTextExtentPoint(hdc, text, text.length(), &size);
+
+	_ctlSelAll.resizeTo(size.cx, 15);
+	_ctlSelAll.GetWindowRect(&rect);
+	ScreenToClient(&rect);
+
+	_ctlSelReverse.moveTo(rect.right + 10, rect.top);
+
+	text = _ctlSelReverse.getText();
+	GetTextExtentPoint(hdc, text, text.length(), &size);
+	_ctlSelReverse.resizeTo(size.cx, 15);
 }

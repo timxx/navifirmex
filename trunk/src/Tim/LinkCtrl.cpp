@@ -20,216 +20,90 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //========================================================================================================
 using namespace _TIM;
 //========================================================================================================
-static COLORREF getParentDlgBkColor(HWND hWnd)
+LRESULT CALLBACK LinkCtrl::LinkCtrlProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	COLORREF crRet = CLR_INVALID;
+	LinkCtrl *pCtl = (LinkCtrl*)::GetWindowLongPtr(hWnd, GWL_USERDATA);
 
-	if (!hWnd || !IsWindow(hWnd))
-		return crRet;
-
-	HWND hWndParent = GetParent(hWnd);
-	if (!hWndParent)	return crRet;
-
-	RECT rc;
-	if (!GetClientRect(hWndParent, &rc))
-		return crRet;
-
-	HDC hDC = GetDC(hWndParent);
-	if (!hDC)	return crRet;
-
-	HDC hdcMem = CreateCompatibleDC(hDC);
-	if (!hdcMem)
-		return crRet;
-
-	HBITMAP hBmp = CreateCompatibleBitmap(hDC, rc.right, rc.bottom);
-	if (!hBmp)	return crRet;
-
-	HGDIOBJ hOld = SelectObject(hdcMem, hBmp);
-	if (!hOld)	return crRet;
-	if (SendMessage(hWndParent,	WM_ERASEBKGND, (WPARAM)hdcMem, 0))
-		crRet = GetPixel(hdcMem, 0, 0);
-
-	SelectObject(hdcMem, hOld);
-	DeleteObject(hBmp);
-	DeleteDC(hdcMem);
-	ReleaseDC(hWndParent, hDC);
-
-	return crRet;
+	return pCtl->runProc(hWnd, uMsg, wParam, lParam);
 }
 
-void LinkCtrl::create(HWND itemHandle, TCHAR * link, COLORREF linkColor)
+void LinkCtrl::create(HWND hwndStatic, TCHAR *link, COLORREF linkColor)
 {
-	// turn on notify style
-	::SetWindowLongPtr(itemHandle, GWL_STYLE, ::GetWindowLongPtr(itemHandle, GWL_STYLE) | SS_NOTIFY);
+	_hWnd = hwndStatic;
 
-	// set the URL text (not the display text)
-	if (link)	_URL = link;
+	setStyle(getStyle() | SS_NOTIFY);
 
-	// set the hyperlink colour
+	if (link)
+		_url = link;
+
 	_linkColor = linkColor;
 
-	// set the visited colour
-	_visitedColor = RGB(128,0,128);
+	_lpfnOld = Subclass(LinkCtrlProc);
 
-	// subclass the static control
-	_oldproc = (WNDPROC)::SetWindowLongPtr(itemHandle, GWLP_WNDPROC, (LONG_PTR)LinkCtrlProc);
-
-	// associate the URL structure with the static control
-	::SetWindowLongPtr(itemHandle, GWLP_USERDATA, (LONG_PTR)this);
-
-	setCursor(itemHandle);
+	setCursor(hwndStatic);
 }
-void LinkCtrl::create(HWND itemHandle, int cmd, HWND msgDest)
+
+void LinkCtrl::create(HWND hwndStatic, int cmd, HWND msgDest)
 {
-	// turn on notify style
-	::SetWindowLongPtr(itemHandle, GWL_STYLE, ::GetWindowLongPtr(itemHandle, GWL_STYLE) | SS_NOTIFY);
+	_hWnd = hwndStatic;
+
+	setStyle(getStyle() | SS_NOTIFY);
 
 	_cmdID = cmd;
 	_msgDest = msgDest;
 
-	// set the hyperlink colour
-	_linkColor = RGB(0,0,255);
+	_lpfnOld = Subclass(LinkCtrlProc);
 
-	// subclass the static control
-	_oldproc = (WNDPROC)::SetWindowLongPtr(itemHandle, GWLP_WNDPROC, (LONG_PTR)LinkCtrlProc);
-
-	// associate the URL structure with the static control
-	::SetWindowLongPtr(itemHandle, GWLP_USERDATA, (LONG_PTR)this);
-
-	setCursor(itemHandle);
-}
-
-void LinkCtrl::destroy()
-{
-	if(_hfUnderlined)
-		::DeleteObject(_hfUnderlined);
-	//if(_hCursor)
-	//	::DestroyCursor(_hCursor);
+	setCursor(hwndStatic);
 }
 
 LRESULT LinkCtrl::runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 {
 	switch(uMsg)
 	{
-		// Free up the structure we allocated
-	case WM_NCDESTROY:
-		//HeapFree(GetProcessHeap(), 0, url);
-		break;
-
-		// Paint the static control using our custom
-		// colours, and with an underline text style
 	case WM_PAINT:
-		{
-			DWORD dwStyle = ::GetWindowLongPtr(hWnd, GWL_STYLE);
-			DWORD dwDTStyle = DT_SINGLELINE;
-
-			//Test if centered horizontally or vertically
-			if(dwStyle & SS_CENTER)	     dwDTStyle |= DT_CENTER;
-			if(dwStyle & SS_RIGHT)		 dwDTStyle |= DT_RIGHT;
-			if(dwStyle & SS_CENTERIMAGE) dwDTStyle |= DT_VCENTER;
-
-			RECT		rect;
-			::GetClientRect(hWnd, &rect);
-
-			PAINTSTRUCT ps;
-			HDC hdc = ::BeginPaint(hWnd, &ps);
-
-			::SetTextColor(hdc, _linkColor);
-
-			::SetBkColor(hdc, getParentDlgBkColor(hWnd)); ///*::GetSysColor(COLOR_3DFACE)*/);
-
-			// Create an underline font 
-			if(_hfUnderlined == 0)
-			{
-				// Get the default GUI font
-				LOGFONT lf;
-				HFONT hf = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
-
-				// Add UNDERLINE attribute
-				GetObject(hf, sizeof lf, &lf);
-				lf.lfUnderline = TRUE;
-
-				// Create a new font
-				_hfUnderlined = ::CreateFontIndirect(&lf);
-			}
-
-			HANDLE hOld = SelectObject(hdc, _hfUnderlined);
-
-			// Draw the text!
-			TCHAR szWinText[MAX_PATH];
-			::GetWindowText(hWnd, szWinText, MAX_PATH);
-			::DrawText(hdc, szWinText, -1, &rect, dwDTStyle);
-
-			::SelectObject(hdc, hOld);
-
-			::EndPaint(hWnd, &ps);
-
-			return 0;
-		}
+		OnPaint();
+		return 0;
 
 	case WM_SETTEXT:
 		{
-			LRESULT ret = ::CallWindowProc(_oldproc, hWnd, uMsg, wParam, lParam);
-			::InvalidateRect(hWnd, 0, 0);
+			LRESULT ret = ::CallWindowProc(_lpfnOld, hWnd, uMsg, wParam, lParam);
+			InvalidateRect();
 			return ret;
 		}
-		// Provide a hand cursor when the mouse moves over us
-		//case WM_SETCURSOR:
-// 	case WM_MOUSEMOVE:
-// 		{
-// 			if (_hCursor == 0)
-// 				_hCursor = LoadCursor(NULL, IDC_HAND);
-// 
-// 			//SetCursor(_hCursor);
-// 
-// 			return TRUE;
-// 		}
 
 	case WM_LBUTTONDOWN:
-		_clicking = true;
-		return TRUE;
-		//break;
+		return 0;
 
 	case WM_LBUTTONUP:
-		if(_clicking)
+		if (_cmdID)
 		{
-			_clicking = false;
-			if (_cmdID)
-			{
-				::SendMessage(_msgDest?_msgDest:_parentWnd, WM_COMMAND, _cmdID, 0);
-			}
-			else
-			{
-				_linkColor = _visitedColor;
+			::SendMessage(_msgDest?_msgDest:_parentWnd, WM_COMMAND, _cmdID, 0);
+		}
+		else
+		{
+			_linkColor = _visitedColor;
 
-				::InvalidateRect(hWnd, 0, 0);
-				::UpdateWindow(hWnd);
+			InvalidateRect();
+			UpdateWindow();
 
-				// Open a browser
-				if(_URL != _T(""))
-				{
-					::ShellExecute(NULL, _T("open"), _URL.c_str(), NULL, NULL, SW_SHOWNORMAL);
-				}
-				else
-				{
-					TCHAR szWinText[MAX_PATH];
-					::GetWindowText(hWnd, szWinText, MAX_PATH);
-					::ShellExecute(NULL, _T("open"), szWinText, NULL, NULL, SW_SHOWNORMAL);
-				}
+			if(!_url.empty()){
+				ShellExecute(NULL, TEXT("open"), _url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+			}else{
+				ShellExecute(NULL, TEXT("open"), getText(), NULL, NULL, SW_SHOWNORMAL);
 			}
 		}
-
 		break;
 
-		// A standard static control returns HTTRANSPARENT here, which
-		// prevents us from receiving any mouse messages. So, return
-		// HTCLIENT instead.
+	// A standard static control returns HTTRANSPARENT here, which
+	// prevents us from receiving any mouse messages. So, return
+	// HTCLIENT instead.
 	case WM_NCHITTEST:
 		return HTCLIENT;
 	}
-	return ::CallWindowProc(_oldproc, hWnd, uMsg, wParam, lParam);
-}
 
+	return ::CallWindowProc(_lpfnOld, hWnd, uMsg, wParam, lParam);
+}
 
 void LinkCtrl::setCursor(HWND hWnd)
 {
@@ -237,4 +111,51 @@ void LinkCtrl::setCursor(HWND hWnd)
 		_hCursor = LoadCursor(NULL, IDC_HAND);
 
 	SetClassLong(hWnd, GCL_HCURSOR, (LONG)_hCursor);
+}
+
+void LinkCtrl::OnPaint()
+{
+	DWORD dwStyle = getStyle();
+	DWORD dwDTStyle = DT_SINGLELINE;
+
+	//Test if centered horizontally or vertically
+	if(dwStyle & SS_CENTER)	     dwDTStyle |= DT_CENTER;
+	if(dwStyle & SS_RIGHT)		 dwDTStyle |= DT_RIGHT;
+	if(dwStyle & SS_CENTERIMAGE) dwDTStyle |= DT_VCENTER;
+
+	Rect rect;
+	GetClientRect(&rect);
+
+	PAINTSTRUCT ps;
+	HDC hdc = BeginPaint(_hWnd, &ps);
+
+	//
+	SetTextColor(hdc, _linkColor);
+
+	//Background should be transparent
+	SetBkMode(hdc, TRANSPARENT);
+
+	// Create an underline font 
+	if(_hfUnderlined == NULL)
+	{
+		// Get the default GUI font
+		HFONT hf = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
+
+		// Add UNDERLINE attribute
+		LOGFONT lf;
+		GetObject(hf, sizeof lf, &lf);
+		lf.lfUnderline = TRUE;
+
+		// Create a new font
+		_hfUnderlined = ::CreateFontIndirect(&lf);
+	}
+
+	HGDIOBJ hOldObj = SelectObject(hdc, _hfUnderlined);
+
+	TString str = getText();
+	DrawText(hdc, str, str.length(), &rect, dwDTStyle);
+
+	SelectObject(hdc, hOldObj);
+
+	EndPaint(_hWnd, &ps);
 }

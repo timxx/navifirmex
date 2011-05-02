@@ -33,7 +33,7 @@ BOOL DlgConfig::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_CLOSE:
-		_pConfig->setColor(_crOldLeft, _crOldRight);
+ 		_pConfig->setColor(_crOldLeft, _crOldRight);
 		::PostMessage(getParent(), NM_CHANGEUI, 0, 0);
 
 		destroy();
@@ -50,20 +50,23 @@ void DlgConfig::OnInit()
 	if (_pConfig == NULL)
 	{
 		msgBox(TEXT("DlgConfig::出错了"), TEXT("错误"), MB_ICONERROR);
+		postMsg(WM_CLOSE);
 		return ;
 	}
 
+	SendMessage(getParent(), NM_SETDIALOGLANG, (WPARAM)_hWnd, (LPARAM)"Config");
+
 	if (_pConfig->exitWithPrompt())
-		CheckButton(IDC_CHECK1);
+		CheckButton(IDC_CHECK_EXIT);
 
 	if (_pConfig->downloadWithPompt())
-		CheckButton(IDC_CHECK2);
+		CheckButton(IDC_CHECK_DOWNLOAD);
 
 	if (_pConfig->showTaskMgr())
-		CheckButton(IDC_CHECK3);
+		CheckButton(IDC_CHECK_NEW_TASK);
 
-	_cbLeft.assign(IDC_BUTTON1, getSelf());
-	_cbRight.assign(IDC_BUTTON2, getSelf());
+	_cbLeft.assign(IDB_LEFT, getSelf());
+	_cbRight.assign(IDB_RIGHT, getSelf());
 
 	_pConfig->getColor(_crOldLeft, _crOldRight);
 
@@ -75,23 +78,23 @@ void DlgConfig::OnCommand(int id)
 {
 	switch (id)
 	{
-	case IDOK:	//确定
-		_pConfig->setExitPrompt(IsButtonChecked(IDC_CHECK1));
-		_pConfig->setDownPrompt(IsButtonChecked(IDC_CHECK2));
-		_pConfig->setShowTaskMgr(IsButtonChecked(IDC_CHECK3));
+	case IDB_OK:	//确定
+		_pConfig->setExitPrompt(IsButtonChecked(IDC_CHECK_EXIT));
+		_pConfig->setDownPrompt(IsButtonChecked(IDC_CHECK_DOWNLOAD));
+		_pConfig->setShowTaskMgr(IsButtonChecked(IDC_CHECK_NEW_TASK));
 		destroy();
 		break;
 
-	case IDCANCEL:	//取消
+	case IDB_CANCEL:	//取消
 		sendMsg(WM_CLOSE);
 		break;
 
-	case IDC_BUTTON1:	//左颜色
-	case IDC_BUTTON2:	//右颜色
+	case IDB_LEFT:	//左颜色
+	case IDB_RIGHT:	//右颜色
 		{
 			COLORREF cr1, cr2;
 			_pConfig->getColor(cr1, cr2);
-			chooseColor(id == IDC_BUTTON1 ? cr1 : cr2);
+			chooseColor(id == IDB_LEFT ? cr1 : cr2);
 			_pConfig->setColor(cr1, cr2);
 
 			_cbLeft.setColor(cr1);

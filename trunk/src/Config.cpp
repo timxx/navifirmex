@@ -28,10 +28,11 @@ Config::Config(const char *filePath)
 	lstrcpyA(_filePath, filePath);
 	RtlSecureZeroMemory(_lastDir, MAX_PATH);
 
-	_pos.x = _pos.y = 100;
 	_nIndex = 1;
 	_cfgDoc = NULL;
+
 	_tgMaxed = 0;
+	_fGUIMaxed = 0;
 
 	_cr1 = RGB(218, 220, 248);
 	_cr2 = RGB(192, 218, 206);
@@ -64,6 +65,11 @@ bool Config::load()
 		return false;
 	}
 
+	const char *lang = node->ToElement()->Attribute("lang");
+	if (lang){
+		_langFile = lang;
+	}
+
 	TiXmlNode *nodeWindow = node->FirstChild("Window");
 	if (nodeWindow){
 		loadWindow(nodeWindow);
@@ -91,6 +97,8 @@ bool Config::save()
 	if (!mainNode)
 		return false;
 
+	mainNode->ToElement()->SetAttribute("lang", _langFile);
+
 	TiXmlNode *nodeWindow = mainNode->FirstChild("Window");
 
 	if (nodeWindow){
@@ -109,9 +117,9 @@ bool Config::save()
 void Config::makeDefault()
 {
 	const char *cfg =
-		"<NaviFirmEx version=\"1.3\">"
+		"<NaviFirmEx version=\"1.5\" lang = \"\">"
 			"<Window>"
-				"<MainGUI x = \"100\" y = \"100\">"
+				"<MainGUI left=\"0\" top=\"0\" right=\"600\" bottom=\"480\" maxed=\"0\">"
 					"<Color begin = \"#BDB8ED\" end =\"#C0DACE\"/>"
 				"</MainGUI>"
 				"<TaskMgr left=\"0\" top=\"0\" right=\"540\" bottom=\"250\" maxed=\"0\"/>"
@@ -188,11 +196,11 @@ void Config::loadWindow(TiXmlNode *node)
 	{
 		int x = 0, y = 0;
 
-		itemElement->Attribute("x", &x);
-		itemElement->Attribute("y", &y);
-
-		_pos.x = x < 0 ? 0 : x;
-		_pos.y = y < 0 ? 0 : y;
+		itemElement->Attribute("left", (int*)&_rcGUI.left);
+		itemElement->Attribute("top", (int*)&_rcGUI.top);
+		itemElement->Attribute("right", (int*)&_rcGUI.right);
+		itemElement->Attribute("bottom", (int*)&_rcGUI.bottom);
+		itemElement->Attribute("maxed", &_fGUIMaxed);
 
 		itemElement = itemElement->FirstChildElement("Color");
 
@@ -268,8 +276,11 @@ void Config::writeWindow(TiXmlNode *node)
 	TiXmlElement* itemElement = node->FirstChildElement("MainGUI");
 	if (itemElement)
 	{
-		itemElement->SetAttribute("x", _pos.x);
-		itemElement->SetAttribute("y", _pos.y);
+		itemElement->SetAttribute("left", _rcGUI.left);
+		itemElement->SetAttribute("top", _rcGUI.top);
+		itemElement->SetAttribute("right", _rcGUI.right);
+		itemElement->SetAttribute("bottom", _rcGUI.bottom);
+		itemElement->SetAttribute("maxed", _fGUIMaxed);
 
 		TiXmlElement *color = itemElement->FirstChildElement("Color");
 		if (color)

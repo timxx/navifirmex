@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "DlgAbout.h"
 #include "res\resource.h"
 #include "common.h"
+#include "nm_message.h"
 
 static const TCHAR szGNUInfo[] = 
 {
@@ -103,7 +104,7 @@ void DlgAbout::OnInit()
 #endif
 	SetItemText(IDS_BUILT, buildTime);
 
-	buildTime = TEXT("NOKIA¹Ì¼þÏÂÔØÆ÷ v1.3 ");
+	buildTime = TEXT("NaviFirmEx v1.5 ");
 #ifdef UNICODE
 	buildTime += TEXT("(UNICODE)");
 #else
@@ -119,4 +120,6 @@ void DlgAbout::OnInit()
 	_projectLink.create(HwndFromId(IDS_PROJECT), TEXT("http://code.google.com/p/navifirmex/"));
 
 	SetItemText(IDC_EDIT1, szGNUInfo);
+
+	SendMessage(getParent(), NM_SETDIALOGLANG, (WPARAM)_hWnd, (LPARAM)"About");
 }

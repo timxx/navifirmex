@@ -1,5 +1,5 @@
 /*
-http://code.google.com/p/vcardtool/
+http://code.google.com/p/navifirmex/
 Copyright (C) 2011  Just Fancy (Just_Fancy@live.com)
 
 This program is free software: you can redistribute it and/or modify
@@ -38,8 +38,43 @@ class TString : public std::basic_string<TCHAR>
 {
 public:
 	TString() : basic_string(){}
-	TString(const TCHAR *str) : basic_string(str) {}
-	TString(const TString & str) : basic_string(str){}
+	TString(const TString &str) : basic_string(str){}
+
+	TString(const wchar_t *str) : basic_string()
+	{
+#ifndef UNICODE
+		assign(wtoa(str));
+#else
+		assign(str);
+#endif
+	}
+
+	TString(const char *str) : basic_string()
+	{
+#ifdef UNICODE
+		assign(atow(str));
+#else
+		assign(str);
+#endif
+	}
+
+	TString(const std::wstring &str) : basic_string()
+	{
+#ifndef UNICODE
+		assign(wtoa(str));
+#else
+		assign(str);
+#endif
+	}
+
+	TString(const std::string &str) : basic_string()
+	{
+#ifdef UNICODE
+		assign(atow(str));
+#else
+		assign(str);
+#endif
+	}
 
 	void format(const TCHAR *fmt, ...);
 

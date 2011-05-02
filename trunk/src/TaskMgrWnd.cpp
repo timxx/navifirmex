@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Tim/File.h"
 #include "Tim\SException.h"
 #include "common.h"
+#include "LangHelper.h"
 
 using namespace std;
 using namespace Tim;
@@ -32,10 +33,10 @@ using namespace Tim;
 #define SPEED_TIMER_ID		5
 #define SPEED_REFRESH		1500		//速度刷新间隔
 
-#define IDM_PAUSE			4500
-#define	IDM_CONTINUE		4501
-#define IDM_DELETE			4502
-#define IDM_COPY_URL		4503
+#define IDM_PAUSE			40300
+#define	IDM_CONTINUE		40301
+#define IDM_DELETE			40302
+#define IDM_COPY_URL		40303
 
 TaskMgrWnd::~TaskMgrWnd()
 {
@@ -195,11 +196,11 @@ void TaskMgrWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 		break;
 
 	case IDM_DELETE:
-		if (msgBox(TEXT("确定要删除这个下载任务吗？删除后将无法恢复！"),
+		if (msgBox("DelTask", TEXT("确定要删除这个下载任务吗？删除后将无法恢复！"),
 			TEXT("删除确认"), MB_ICONQUESTION | MB_YESNO) == IDYES)
 		{
 			if (!DeleteTask(index)){
-				msgBox(TEXT("删除失败！"), TEXT("操作失败"), MB_ICONERROR);
+				msgBox("DelErr", TEXT("删除失败！"), TEXT("操作失败"), MB_ICONERROR);
 			}
 		}
 		break;
@@ -216,7 +217,7 @@ void TaskMgrWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 #else
 					if (!CopyTextToClipbrd(it->url))
 #endif
-						msgBox(TEXT("复制URL到剪切板时出错了"), TEXT("无法复制"), MB_ICONERROR);
+						msgBox("Clipbrd", TEXT("复制URL到剪切板时出错了"), TEXT("无法复制"), MB_ICONERROR);
 					break;
 				}
 			}
@@ -250,7 +251,7 @@ void TaskMgrWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TEXT("速度")
 	};
 
-	int aWidth[] = {40, 130, 70, 190, 80};
+	int aWidth[] = {50, 130, 70, 190, 80};
 
 	for (size_t i=0; i<5; i++)
 	{
@@ -364,6 +365,12 @@ void TaskMgrWnd::OnNotify(int id, NMHDR *pnmh)
 		{
 			LPNMITEMACTIVATE lpnmitem = (LPNMITEMACTIVATE)pnmh;
 
+			//Fiexed: Apr.23, 2011
+			if (_vDownloader.empty() ||
+				lpnmitem->iItem >= _vDownloader.size()
+				)
+				return ;
+
 			TaskStatus status = GetTaskStatus(lpnmitem->iItem);
 
 			if (status == ts_downloding)
@@ -433,7 +440,7 @@ void TaskMgrWnd::newTask(const FileInfo &fileInfo)
 {
 	if (fileInfo.url.empty())
 	{
-		msgBox(TEXT("下载URL不能为空，添加下载任务失败"), TEXT("下载任务"), MB_ICONINFORMATION);
+		msgBox("NewTask_Url", TEXT("下载URL不能为空，添加下载任务失败"), TEXT("下载任务"), MB_ICONINFORMATION);
 		return ;
 	}
 
@@ -451,7 +458,7 @@ void TaskMgrWnd::newTask(const FileInfo &fileInfo)
 
 	if (!pmd->Init(false))
 	{
-		msgBox(TEXT("初始化libcurl失败，无法进行下载！"), TEXT("出错了"), MB_ICONERROR);
+		msgBox("NewTask_init", TEXT("初始化libcurl失败，无法进行下载！"), TEXT("出错了"), MB_ICONERROR);
 		delete pmd;
 		return ;
 	}
@@ -473,7 +480,7 @@ void TaskMgrWnd::newTask(const FileInfo &fileInfo)
 	if (!pmd->Download(getSelf(), ti))
 	{
 		_taskView->DelItem(item);
-		msgBox(TEXT("无法创建下载任务，下载失败！"), TEXT("下载失败"), MB_ICONERROR);
+		msgBox("NewTask_Err", TEXT("无法创建下载任务，下载失败！"), TEXT("下载失败"), MB_ICONERROR);
 		
 		delete pmd;
 
@@ -494,7 +501,7 @@ void TaskMgrWnd::newTask(const TiFile &tiFile)
 
 	if (!pmd->Init(false))
 	{
-		msgBox(TEXT("初始化libcurl失败，无法进行下载！"), TEXT("出错了"), MB_ICONERROR);
+		msgBox("NewTask_init", TEXT("初始化libcurl失败，无法进行下载！"), TEXT("出错了"), MB_ICONERROR);
 		delete pmd;
 		return ;
 	}
@@ -502,8 +509,7 @@ void TaskMgrWnd::newTask(const TiFile &tiFile)
 	FileInfo fileInfo;
 
 	std::wstring title = File::GetFileName(atow(tiFile.file));
-	if (title.empty())
-	{
+	if (title.empty()){
 		title = atow(tiFile.file);
 	}
 #ifdef UNICODE
@@ -517,14 +523,25 @@ void TaskMgrWnd::newTask(const TiFile &tiFile)
 	fileInfo.size = tiFile.size;
 
 	int item = _taskView->NewItem(fileInfo);
+
+	//Fixed
+	//when the wanted file does not exists
+	//then should download from the beginning
+	//May. 1, 2011
+
+	TiFile tmp = tiFile;
+	if (!File::Exists(tiFile.file))
+		tmp.offset = 0;
+
 	//“还原”上次下载进度，防止没开始时处于0状态
-	_taskView->SetProgressPos(item, tiFile.offset);
+	_taskView->SetProgressPos(item, tmp.offset);
+
 	SetTaskStatus(item, ts_downloding);
 
-	if (!pmd->Download(getSelf(), tiFile))
+	if (!pmd->Download(getSelf(), tmp))
 	{
 		_taskView->DelItem(item);
-		msgBox(TEXT("无法创建下载任务，下载失败！"), TEXT("下载失败"), MB_ICONERROR);
+		msgBox("NewTask_Err", TEXT("无法创建下载任务，下载失败！"), TEXT("下载失败"), MB_ICONERROR);
 
 		delete pmd;
 
@@ -672,6 +689,8 @@ void TaskMgrWnd::ShowPopupMenu()
 	AppendMenu(hMenu, MF_SEPARATOR, 0, 0);
 	AppendMenu(hMenu, MF_STRING | MF_BYCOMMAND, IDM_COPY_URL, TEXT("复制下载链接"));
 
+	SendMessage(getParent(), NM_SETPOPMENULANG, (WPARAM)hMenu, (LPARAM)"ProgressView");
+
 	POINT pt;
 	GetCursorPos(&pt);
 	TrackPopupMenuEx(hMenu, TPM_BOTTOMALIGN, pt.x, pt.y, _hWnd, 0);
@@ -735,4 +754,25 @@ bool TaskMgrWnd::DeleteTask(int i)
 	}
 
 	return false;
+}
+
+int TaskMgrWnd::msgBox(LPCSTR type, const TString &text, const TString &caption /*= TEXT("MessageBox")*/, UINT uType/* = MB_OK*/)
+{
+	LangHelper lang;
+
+	TString strCaption = caption;
+	TString strInfo = text;
+	TCHAR szLang[MAX_PATH] = {0};
+
+	SendMessage(getParent(), NM_GETLANGPATH, 0, reinterpret_cast<LPARAM>(szLang));
+
+	if (szLang[0])
+	{
+		if (lang.Load(szLang))
+		{
+			lang.GetMsgBox(type, strInfo, strCaption);
+		}
+	}
+
+	return Window::msgBox(strInfo, strCaption, uType);
 }

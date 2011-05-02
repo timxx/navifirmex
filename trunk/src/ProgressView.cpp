@@ -164,40 +164,42 @@ int ProgressView::GetProgress()
 		return 100;
 	}
 
-	float progress = 0;
-	int size = _vProgress.size();
+	//old method not exactly get the right progress
+	//Fixed: May 1, 2011
 
-	try
+// 	float progress = 0;
+// 	int size = _vProgress.size();
+
+	unsigned long total = 0;
+	unsigned long current = 0;
+
+	for (size_t i=0; i<_vProgress.size(); i++)
 	{
-		for (size_t i=0; i<_vProgress.size(); i++)
-		{
-			int total =  _vProgress[i]->GetRange(FALSE, NULL);
-			if (total == 0)
-			{
-				size--;
-				continue;
-			}
+// 		int total =  _vProgress[i]->GetRange(FALSE, NULL);
+// 		if (total == 0)
+// 		{
+// 			size--;
+// 			continue;
+// 		}
+// 
+// 		progress += (float)_vProgress[i]->GetPos() / total;
 
-			progress += (float)_vProgress[i]->GetPos() / total;
-		}
-
-		if (size <= 0)
-			return 100;
-
-		//四舍五入
-		int percent = int((progress * 100 / size) * 10 + 5)/10;
-
-		return percent;
-	}
-	catch(const Tim::SException &e)
-	{
-		char info[256];
-
-		wsprintfA(info, "ProgressView::GetProgress(): 发生[%s]异常", e.what());
-		MessageBoxA(_hWnd, info, "发生异常", MB_ICONERROR);
+		current += _vProgress[i]->GetPos();
+		total += _vProgress[i]->GetRange(FALSE, NULL);
 	}
 
-	return 100;
+// 	if (size <= 0)
+// 		return 100;
+// 
+// 	//四舍五入
+// 	int percent = int((progress * 100 / size) * 10 + 5)/10;
+// 
+// 	return percent;
+
+	if (total == 0)
+		return 100;
+	
+	return current * 100 / total;
 }
 /*
 void ProgressView::SetProgressRange(int i, int high)

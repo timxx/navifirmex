@@ -37,6 +37,9 @@ public:
 	void AddTask(const FileInfo &file);
 	void AddTask(const std::vector<FileInfo> &file);
 
+	//resize the "Select All" & "Inverse Select" link
+	void ResizeLabels();
+
 protected:
 	virtual BOOL CALLBACK runProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
