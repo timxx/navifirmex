@@ -57,9 +57,6 @@
     <ClCompile Include="..\src\TinyXml\tinyxml.cpp">
       <Filter>Source Files\TinyXml</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ImageEx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Zip\unzip.cpp">
       <Filter>Source Files\Zip</Filter>
     </ClCompile>
@@ -108,9 +105,6 @@
     <ClCompile Include="..\src\Tim\File.cpp">
       <Filter>Source Files\Tim</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\DlgNew.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -121,6 +115,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ColorButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LangHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DlgCode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\StatusEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -154,9 +157,6 @@
     </ClInclude>
     <ClInclude Include="..\src\TinyXml\tinyxml.h">
       <Filter>Header Files\TinyXml</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ImageEx.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\data_type.h">
       <Filter>Header Files</Filter>
@@ -215,9 +215,6 @@
     <ClInclude Include="..\src\Tim\File.h">
       <Filter>Header Files\Tim</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\DlgNew.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -228,6 +225,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ColorButton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LangHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DlgCode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\StatusEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -268,6 +274,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\src\res\media-playback-start-2.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\process-working.bmp">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

@@ -1,0 +1,205 @@
+<?xml version = "1.0" encoding = "GB2312"?>
+<Language name = "简体中文">
+	<Menu>
+		<Main>
+			<Entries>
+				<item id = "0" text = "文件(&amp;F)" />
+				<item id = "1" text = "选项(&amp;O)" />
+				<item id = "2" text = "查看(&amp;V)" />
+				<item id = "3" text = "帮助(&amp;H)" />
+			</Entries>
+			
+			<SubEntries>
+				<item xPos = "1" yPos = "0" text = "服务器(&amp;S)"/>
+				<item xPos = "1" yPos = "4" text = "语言(&amp;L)"/>
+			</SubEntries>
+			
+			<Command>
+				<item id = "40001" text = "搜索CODE(&amp;S)	Ctrl+F" />
+				<item id = "40002" text = "刷新列表(&amp;R)	F5" />
+				<item id = "40003" text = "继续下载" />
+				<item id = "40004" text = "退出(&amp;X)	Alt+F4" />
+				
+				<item id = "40005" text = "Nokia Care Suit" />
+				<item id = "40006" text = "Production External" />
+				<item id = "40007" text = "Quality Assurance" />
+				
+				<item id = "40008" text = "配置(&amp;P)" />
+				
+				<item id = "40009" text = "下载任务(&amp;T)	Ctrl+T" />
+				
+				<item id = "40010" text = "帮助(&amp;H)" />
+				<item id = "40011" text = "关于(&amp;A)" />
+			</Command>
+		</Main>
+		<Popup>
+				<Product>
+					<SubEntries>
+						<item xPos = "0" yPos = "2" text = "导出列表"/>
+					</SubEntries>
+					<Command>
+						<item id = "40002" text = "刷新(&amp;R)	F5" />
+						<item id = "40017" text = "文本"/>
+						<item id = "40018" text = "XML"/>
+					</Command>
+				</Product>
+				
+				<Variant>
+					<SubEntries>
+						<item xPos = "0" yPos = "0" text = "导出列表"/>
+					</SubEntries>
+					<Command>
+						<item id = "40019" text = "文本" />
+						<item id = "40020" text = "XML" />
+					</Command>
+				</Variant>
+				
+				<File>
+					<SubEntries>
+						<item xPos = "0" yPos = "3" text = "复制URL到剪贴板"/>
+					</SubEntries>
+					<Command>
+						<item id = "40012" text = "全选	Ctrl+A" />
+						<item id = "40013" text = "取消全选	Ctrl+Z" />
+						<item id = "40014" text = "当前文件" />
+						<item id = "40015" text = "打勾文件" />
+						<item id = "40016" text = "全部文件" />
+					</Command>
+				</File>
+				
+				<ProgressView>
+					<Command>
+						<item id = "40300" text = "暂停下载" />
+						<item id = "40301" text = "继续下载" />
+						<item id = "40302" text = "删除任务" />
+						<item id = "40303" text = "复制下载链接" />
+					</Command>
+				</ProgressView>
+		</Popup>
+	</Menu>
+	<UI title = "NOKIA固件下载器">
+		<Product text = "产品型号："/>
+		<Release text = "发布版本："/>
+		<Variant text = "CODE："/>
+		<FileList label = "文件列表：">
+			<FileName text = "文件名"/>
+			<FileSize text = "大小"/>
+		</FileList>
+		<Download text = "添加到下载任务"/>
+	</UI>
+	<TaskMgr title = "下载任务">
+		<ListView>
+			<Status text = "状态"/>
+			<FileName text = "文件名"/>
+			<FileSize text = "大小"/>
+			<Progress text = "进度"/>
+			<Speed text = "速度"/>
+		</ListView>
+	</TaskMgr>
+	<Dialog>
+		<CODE title = "请输入CODE"/>
+		<About title = "关于"/>
+		<NewTask title = "新建下载任务">
+			<item id = "1028" text = "浏览..."/>
+			<item id = "1029" text = "下载"/>
+			<item id = "1030" text = "取消"/>
+			<item id = "1031" text = "全选"/>
+			<item id = "1032" text = "反选"/>
+			<FileList>
+				<FileName text = "文件名"/>
+				<FileSize text = "大小"/>
+			</FileList>
+		</NewTask>
+		<Config title = "配置">
+			<item id = "1036" text = "消息提示"/>
+			<item id = "1037" text = "主窗口颜色"/>
+			<item id = "1038" text = "退出时提示有下载任务"/>
+			<item id = "1039" text = "提示有未完成下载任务"/>
+			<item id = "1040" text = "新建下载时显示任务窗口"/>
+			<item id = "1041" text = "左"/>
+			<item id = "1042" text = "右"/>
+			<item id = "1043" text = "确定"/>
+			<item id = "1044" text = "取消"/>
+		</Config>
+		
+		<Confirm>
+			<item id = "1047" text = "是(&amp;Y)"/>
+			<item id = "1048" text = "否(&amp;N)"/>
+			<item id = "1049" text = "记住操作，不再提醒"/>
+
+			<Exit title = "退出?">
+				<Info text = "正在下载文件，确定要退出吗？"/>
+			</Exit>
+			
+			<Task title = "继续下载?">
+				<Info text = "是否继续下载上次未完成任务？"/>
+			</Task>
+		</Confirm>
+	</Dialog>
+	
+	<MsgBox>
+		<TaskCon title = "继续下载">
+			<Text>无文件可继续下载。</Text>
+		</TaskCon>
+		<ThreadErr title = "出错了">
+			<Text>创建程序时出错了。</Text>
+		</ThreadErr>
+		<Refresh title = "刷新？">
+			<Text>确定要刷新列表？这将会清空缓存。</Text>
+		</Refresh>
+		<Clipbrd title = "复制URL">
+			<Text>无法复制URL到系统剪贴板。</Text>
+		</Clipbrd>
+		<ExportTxt title = "导出文本">
+			<Text>导出内容为文本时出错了</Text>
+		</ExportTxt>
+		<SID title = "出错了">
+			<Text>无法从服务器获取有效SID，请稍后再试。</Text>
+		</SID>
+		<DelTask title = "删除任务">
+			<Text>确定要删除这个下载任务吗？</Text>
+		</DelTask>
+		<DelErr title = "操作失败">
+			<Text>无法删除任务。</Text>
+		</DelErr>
+		<NewTask_Url title = "新建下载任务">
+			<Text>下载URL不能为空，无法下载文件。</Text>
+		</NewTask_Url>
+		<NewTask_init title = "出错了">
+			<Text>初始化Libcurl出错了，无法进行下载。</Text>
+		</NewTask_init>
+		<NewTask_Err title = "下载失败">
+			<Text>无法下载文件，下载失败了。</Text>
+		</NewTask_Err>
+		<EmptyDir title = "友情提醒">
+			<Text>您必须选择一个存放的目录！</Text>
+		</EmptyDir>
+		<ServerErr_Product title = "获取产品列表失败">
+			<Text>获取产品列表时发生错误，服务器返回信息：</Text>
+		</ServerErr_Product>
+		<ServerErr_Release title = "获取发行版本列表失败">
+			<Text>获取发行版本列表时发生错误，服务器返回信息：</Text>
+		</ServerErr_Release>
+		<ServerErr_Variant title = "获取CODE列表失败">
+			<Text>获取CODE列表时发生错误，服务器返回信息：</Text>
+		</ServerErr_Variant>
+		<ServerErr_Code title = "获取文件列表失败">
+			<Text>获取文件列表时发生错误，请检查输入的CODE是否正确。服务器返回信息：</Text>
+		</ServerErr_Code>
+	</MsgBox>
+	
+	<Status>
+		<Finish>已完成全部下载任务。。。</Finish>
+		<CopyUrl>成功复制URL到系统剪贴板。。。</CopyUrl>
+		<ReadCache>正在读取缓存文件。。。</ReadCache>
+		<EndProductThread>结束获取产品列表。。。</EndProductThread>
+		<EndReleaseThread>结束获取版本列表。。。</EndReleaseThread>
+		<EndVariantThread>结束获取Code列表。。。</EndVariantThread>
+		<EndCodeThread>结束获取指定Code文件列表。。。</EndCodeThread>
+		<Parsing>正在解析返回数据。。。</Parsing>
+		<WaitPic>等待手机图片下载完成。。。</WaitPic>
+		<Connecting>正在连接服务器。。。</Connecting>
+		<GetSID>尝试获取SID。。。</GetSID>
+	</Status>
+
+</Language>

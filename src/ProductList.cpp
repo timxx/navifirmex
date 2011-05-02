@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ProductList.h"
 #include "res\resource.h"
+#include "nm_message.h"
 
 ProductList::ProductList()
 {
@@ -49,18 +50,16 @@ void ProductList::ShowRMenu()
 	HMENU hMenu = LoadMenu(IDR_MENU_PRODUCT);
 	HMENU hMenuPop = GetSubMenu(hMenu, 0);
 
-// 	::AppendMenu(hMenuPop, MF_STRING, IDM_REFRESH, TEXT("刷新产品"));
-// 	::AppendMenu(hMenuPop, MF_SEPARATOR, NULL, NULL);
-// 	::AppendMenu(hMenuPop, MF_STRING, IDM_EXPORT_PRODUCT, TEXT("保存列表"));
-
 	if (GetCount() == 0)
 	{
 		RemoveMenu(hMenuPop, 1, MF_BYPOSITION);	//删除分隔线
 		RemoveMenu(hMenuPop, 1, MF_BYPOSITION);	//删除导出列表
 	}
 	else if(GetCount() == 1)
-		if(GetText(0) == TEXT("<空>"))
+		if(GetText(0) == TEXT("<null>"))
 			return ;
+
+	SendMessage(getParent(), NM_SETPOPMENULANG, (WPARAM)hMenuPop, (LPARAM)"Product");
 
 	POINT pt;
 	::GetCursorPos(&pt);

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////////
 #include <list>
 #include <shobjidl.h>
+#include <GdiPlus.h>
 
 #include "Tim\Dialog.h"
 #include "Tim\CommonCtrls.h"
@@ -30,25 +31,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "data_type.h"
 #include "Http.h"
 #include "TinyXml/tinyxml.h"
-#include "ImageEx.h"
 #include "ProductList.h"
 #include "VariantList.h"
 #include "Config.h"
 #include "TaskMgrWnd.h"
 #include "NveFile.h"
 #include "DlgNewTask.h"
+#include "DlgConfirm.h"
+#include "LangHelper.h"
+#include "StatusEx.h"
 //////////////////////////////////////////////////////////////////////////
 using namespace _TIM;
 using namespace std;
 //////////////////////////////////////////////////////////////////////////
-class GUIWnd : public Dialog
+class GUIWnd : public Window
 {
 public:
 	GUIWnd():
 		_hThreadProduct(INVALID_HANDLE_VALUE), _hThreadRelease(INVALID_HANDLE_VALUE),
 		_hThreadVariant(INVALID_HANDLE_VALUE), _hTreadGetImage(INVALID_HANDLE_VALUE),
 		_hbmpPhone(NULL), _hTreadGetFileList(INVALID_HANDLE_VALUE),
-		_pConfig(0), _gdiplusToken(0), _imgProcess(0), _sortIndex(0),
+		_pConfig(0), _sortIndex(0),
 		_fPrompt(TRUE), _fOverwrite(TRUE), _nvFile(NULL)
 	{
 		_taskMgr = NULL;
@@ -58,22 +61,30 @@ public:
 		_fDisableTaskbar = TRUE;
 		_hbmpBkgnd = NULL;
 		_newTaskDlg = NULL;
+		_hFontChild = NULL;
+		_curLangIndex = -1;
+		_processIndex = 0;
+		_hbmpProcess = NULL;
 	}
 	~GUIWnd(){}
 
-	//friend class DlgDownload;
-protected:
-	virtual BOOL CALLBACK runProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	friend class LangHelper;
 
+	virtual void init(HINSTANCE hinst, HWND hwndParent);
+protected:
+	static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	LRESULT CALLBACK runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	void OnCreate(LPCREATESTRUCT lpCreateStruct);
 	void OnCommand(int id, HWND hwndCtl, UINT uNotifyCode);
 	void OnNotify(int id, NMHDR *pnmh);
 	void OnPaint();
-	void OnInit();
 	void OnClose();
 	void OnDestroy();
 	void OnAboutClose(BOOL bNotEmpty, std::list<TiFile> &fileList);
 	void OnUrlDown(LPCTSTR url);
 	void OnInitMenu(HMENU hMenu);
+	void OnSize(int nWidth, int nHeight);
 
 	void doProductChange();
 	void doReleaseChange();
@@ -109,7 +120,7 @@ protected:
 	void ShowReleases();
 	void ShowVariants();
 
-	void ShowPopupMenu();
+	void PopupFileListMenu();
 
 	static bool SaveToFile(LPCTSTR lpPath, LPVOID data, DWORD dwLen);
 
@@ -169,7 +180,7 @@ protected:
 	TString GetChildElementText(TiXmlNode *node, const char *childElement);
 
 	bool SaveExportText(LPCTSTR lpDefFileName, const TString &strData);
-	void UpdateStatus(const TString &infoText, int nPart = 1);
+	void UpdateStatus(LPCSTR type, const TString &infoText, int nPart = 1);
 	void ShowServer(int index = 1);
 
 	void SortListItem(int index);
@@ -196,22 +207,53 @@ protected:
 	void ShowIndeterminateProgress(bool fShow = true);
 	void ShowToolTip(bool fShow = true);
 	//Ë¢ÐÂStatic¿Ø¼þ±³¾°
-	void InvalidStatic(UINT id);
+	void InvalidStatic(Static &staic);
 
-	void ExcludeChildRect(HDC hdc);
+//	void ExcludeChildRect(HDC hdc);
 
 	void InitBackground();
 
+	void LoadSession();
+
+	void CreateControls();
+
+	void LoadLanguage();
+	bool IsLangFile(const TString &file);
+	void InitLangMenu();
+
+	bool SetLanguage(size_t i);
+	void SetConfirmLang(DlgConfirm &dlg, const char *type);
+
+	//resize the labels so it fits different language
+	void ResizeLabels();
+
+	bool PrepareLang(LangHelper &lang);
+
+	int msgBox(LPCSTR type, const TString &text, const TString &caption = TEXT("MessageBox"), UINT uType = MB_OK);
 private:
 	TaskMgrWnd * _taskMgr;
 	DlgNewTask * _newTaskDlg;
+
+	Static	_labelProducts;
+	Static	_labelProductsCount;
+
+	Static	_labelReleases;
+	Static	_labelReleasesCount;
+
+	Static	_labelVariants;
+	Static	_labelVariantsCount;
+
+	Static	_labelFiles;
+	Static	_labelFilesCount;
+
+	Static	_picFrame;
 
 	ProductList	_lbProduct;
 	ListBox		_lbRelease;
 	VariantList	_lbVariant;
 	ListView	_lvFile;
 
-	StatusBar	_status;
+	StatusEx	_status;
 
 	Edit		_edProduct;
 	Edit		_edVariant;
@@ -232,9 +274,6 @@ private:
 	HANDLE	_hThreadVariant;
 	HANDLE	_hTreadGetImage;
 	HANDLE	_hTreadGetFileList;
-
-	Gdiplus::ImageEx	*_imgProcess;
-	ULONG_PTR	_gdiplusToken;
 
 	HBITMAP	_hbmpPhone;
 
@@ -271,6 +310,14 @@ private:
 	UINT WM_TASKBARBUTTONCREATED;
 
 	HBITMAP	_hbmpBkgnd;
+
+	HFONT	_hFontChild;
+
+	vector<TString> _vLang;
+	int _curLangIndex;	//current language index of _vLang
+
+	int _processIndex;
+	HBITMAP _hbmpProcess;
 };
 
 #endif

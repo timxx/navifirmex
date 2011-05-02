@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "VariantList.h"
 #include "res\resource.h"
+#include "nm_message.h"
 
 VariantList::VariantList()
 {
@@ -49,11 +50,13 @@ void VariantList::ShowRMenu()
 	if (GetCount() == 0)
 		return ;
 	else if(GetCount() == 1)
-		if(GetText(0) == TEXT("<Пе>"))
+		if(GetText(0) == TEXT("<null>"))
 			return ;
 
 	HMENU hMenu = LoadMenu(IDR_MENU_VARIANT);
 	HMENU hMenuPop = GetSubMenu(hMenu, 0);
+
+	SendMessage(getParent(), NM_SETPOPMENULANG, (WPARAM)hMenuPop, (LPARAM)"Variant");
 
 	POINT pt;
 	::GetCursorPos(&pt);

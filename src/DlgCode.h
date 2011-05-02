@@ -22,19 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tim\dialog.h"
 
-//新建下载对话框
-//如果输入为CODE，则获取下载列表
-//是URL则新建下载任务
-
 class DlgNew : public Tim::Dialog
 {
 public:
 
 protected:
 	virtual BOOL CALLBACK runProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-	//bool IsUrl(const Tim::TString &str);
-
 };
 
 #endif

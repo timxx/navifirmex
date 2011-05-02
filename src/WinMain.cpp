@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //========================================================================================================
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' "\
 	"version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
+#pragma comment(lib, "gdiplus.lib")
 //========================================================================================================
 //////////////////////////////////////////////////////////////////////////
 #include "GUIWnd.h"
@@ -36,34 +38,55 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow)
 	CreateMutex(NULL, FALSE, TEXT("NaviFirmEx_Mutex"));
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		int ans = MessageBox(GetActiveWindow(), \
-			TEXT("您已经运行了一个实例了，您是要将程序置前还是再运行一个实例？\r\n")
-			TEXT("[是]置前当前实例\r\n[否]再运行一个实例"),
-			TEXT("诺基亚固件下载器"), MB_ICONQUESTION | MB_YESNO);
+		LANGID id = GetSystemDefaultUILanguage();
+		int ans = IDYES;
+		if (id == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) ||
+			id == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)
+			)
+		{
+			ans = MessageBox(GetActiveWindow(), \
+				TEXT("您已经运行了一个实例了，您是要将程序置前还是再运行一个实例？\r\n")
+				TEXT("[是]置前当前实例\r\n")
+				TEXT("[否]再运行一个实例"),
+				TEXT("NaviFirmEx"), MB_ICONQUESTION | MB_YESNO);
+		}
+		else
+		{
+			ans = MessageBox(GetActiveWindow(), \
+				TEXT("You have already ran one or more instance. Do you want to active current?\r\n")
+				TEXT("[Yes]Active\r\n")
+				TEXT("[No]Run another"),
+				TEXT("NaviFirmEx"), MB_ICONQUESTION | MB_YESNO);
+		}
 
 		if (ans == IDYES)
 		{
-			HWND hWnd = FindWindow(TEXT("#32770"), TEXT("NOKIA固件下载器"));
+			HWND hWnd = FindWindow(TEXT("NaviFirmExClass"), NULL);
+
+			if (IsIconic(hWnd))
+				SendMessage(hWnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+
 			SetForegroundWindow(hWnd);	//如果打开了两个以上时只置前一个
 			return 0;
 		}
 	}
+
+	ULONG_PTR	gdiplusToken = 0;
+
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+	Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
 	Tim::SException::install();
 
 	try
 	{
 		guiWnd.init(hInst, NULL);
-		guiWnd.create(IDD_MAIN_GUI);
 
 		HACCEL hAcc = LoadAccelerators(hInst, MAKEINTRESOURCE(IDR_ACCELERATOR1));
 
 		while (GetMessage(&msg, NULL, 0, 0))
 		{
-			if (
-				!TranslateAccelerator(guiWnd.getSelf(), hAcc, &msg) &&
-				!IsDialogMessage(guiWnd.getSelf(), &msg)
-				)
+			if (!TranslateAccelerator(guiWnd.getSelf(), hAcc, &msg))
 			{
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
@@ -73,8 +96,6 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow)
 
 	catch(const SException &e)
 	{
-// 		TString str;
-// 		str.format(TEXT("在[0x%08X]处发生[%hS]异常，程序即将退出。"), e.where(), e.what());
 		char info[256];
 		wsprintfA(info, "在[0x%08X]处发生[%s]异常，程序即将退出。", e.where(), e.what());
 		MessageBoxA(GetActiveWindow(), info, "异常", MB_ICONERROR);
@@ -89,6 +110,8 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow)
 	}
 
 	curl_global_cleanup();
+
+	Gdiplus::GdiplusShutdown(gdiplusToken);
 
 	return msg.wParam;
 }

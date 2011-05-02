@@ -55,26 +55,34 @@ HBITMAP GradienBitmap(HWND hWnd, COLORREF cr1, COLORREF cr2)
 
 	HGDIOBJ hOldObj = SelectObject(hdcMem, hbmp);
 
-	Rect rcFill;
-
-	for(int nOnBand=0; nOnBand < nSteps; nOnBand++)
+	if (cr1 == cr2)
 	{
-		SetRect(&rcFill, int(nOnBand * fStep),
-			0, int((nOnBand+1)*fStep), rcClient.bottom + 1);
-
-		HBRUSH hbr = CreateSolidBrush(
-			RGB( nRed + fRefStep * nOnBand,
-			nGreen + fGreenStep * nOnBand,
-			nBlue + fBlueStep * nOnBand )
-			);
-
-		HGDIOBJ hOldBrush = SelectObject(hdcMem, hbr);
-
-		FillRect(hdcMem, &rcFill, hbr);
-
-		SelectObject(hdcMem, hOldBrush);
+		HBRUSH hbr = CreateSolidBrush(cr1);
+		FillRect(hdcMem, &rcClient, hbr);
 		DeleteObject(hbr);
+	}
+	else
+	{
+		Rect rcFill;
 
+		for(int nOnBand=0; nOnBand < nSteps; nOnBand++)
+		{
+			SetRect(&rcFill, int(nOnBand * fStep),
+				0, int((nOnBand+1)*fStep), rcClient.bottom + 1);
+
+			HBRUSH hbr = CreateSolidBrush(
+				RGB( nRed + fRefStep * nOnBand,
+				nGreen + fGreenStep * nOnBand,
+				nBlue + fBlueStep * nOnBand )
+				);
+
+			HGDIOBJ hOldBrush = SelectObject(hdcMem, hbr);
+
+			FillRect(hdcMem, &rcFill, hbr);
+
+			SelectObject(hdcMem, hOldBrush);
+			DeleteObject(hbr);
+		}
 	}
 
 	SelectObject(hdcMem, hOldObj);

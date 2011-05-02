@@ -1,5 +1,5 @@
 /*
-http://code.google.com/p/vcardtool/
+http://code.google.com/p/navifirmex/
 Copyright (C) 2011  Just Fancy (Just_Fancy@live.com)
 
 This program is free software: you can redistribute it and/or modify

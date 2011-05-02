@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "DlgNew.h"
+#include "DlgCode.h"
 #include "res\resource.h"
 #include "nm_message.h"
 
@@ -28,29 +28,31 @@ BOOL CALLBACK DlgNew::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_INITDIALOG:
 		SetDefaultButton(IDOK);
+		SendMessage(getParent(), NM_SETDIALOGLANG, (WPARAM)_hWnd, (LPARAM)"CODE");
 		return TRUE;
 
 	case WM_COMMAND:
 		if (LOWORD(wParam) == IDOK)
 		{
 			TString str = GetItemText(IDE_CODE_URL);
+			str.trim();
 			if (str.empty())
 			{
-				msgBox(TEXT("请先输入完整信息"), TEXT("提示"), MB_ICONINFORMATION);
+// 				msgBox(TEXT("请先输入完整信息"), TEXT("提示"), MB_ICONINFORMATION);
 				FocusCtrl(IDE_CODE_URL);
 				break;
 			}
 			
-			if (str.length() != 7)
-			{
-				int ans = msgBox(TEXT("一般CODE都7位的吧，是否重输？"),
-					TEXT("提醒"), MB_ICONQUESTION | MB_YESNO);
-				if (ans == IDYES)
-				{
-					FocusCtrl(IDE_CODE_URL);
-					break;
-				}
-			}
+// 			if (str.length() != 7)
+// 			{
+// 				int ans = msgBox(TEXT("一般CODE都7位的吧，是否重输？"),
+// 					TEXT("提醒"), MB_ICONQUESTION | MB_YESNO);
+// 				if (ans == IDYES)
+// 				{
+// 					FocusCtrl(IDE_CODE_URL);
+// 					break;
+// 				}
+// 			}
 
 			//bool url = IsUrl(str);
 			//用Post str会被释放了
@@ -70,31 +72,3 @@ BOOL CALLBACK DlgNew::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	return FALSE;
 }
-/*
-bool DlgNew::IsUrl(const TString &str)
-{
-	//str不能为空
-
-	TString tmp = str;
-	//只要出现 : \ / http ftp . 之类都算是URL
-	tmp.trim();
-	tmp.toLower();
-	int npos = TString::npos;
-
-	TCHAR url[] = TEXT(":.\\/_-");
-	
-	for (size_t i = 0; i<tmp.length(); i++)
-	{
-		for (size_t j=0; j<6; j++)
-			if (tmp.at(i) == url[j])
-				return true;
-	}
-
-	if (tmp.find(TEXT("http")) != npos)
-		return true;
-
-	if (tmp.find(TEXT("ftp")) != npos)
-		return true;
-
-	return false;
-}*/

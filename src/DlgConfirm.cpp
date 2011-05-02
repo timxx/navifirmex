@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DlgConfirm.h"
 #include "res\resource.h"
+#include "nm_message.h"
 
 BOOL CALLBACK DlgConfirm::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -35,16 +36,18 @@ BOOL CALLBACK DlgConfirm::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (!_title.empty()){
 				SetWindowText(_title);
 			}
+
+			SendMessage(getParent(), NM_SETDIALOGLANG, (WPARAM)_hWnd, (LPARAM)"Confirm");
 		}
 		return TRUE;
 
 	case WM_COMMAND:
-		if (LOWORD(wParam) == IDYES)
+		if (LOWORD(wParam) == ID_YES)
 		{
 			_fYes = true;
 			sendMsg(WM_CLOSE);
 		}
-		else if (LOWORD(wParam) == IDNO)
+		else if (LOWORD(wParam) == ID_NO)
 		{
 			_fYes = false;
 			sendMsg(WM_CLOSE);

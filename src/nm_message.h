@@ -55,4 +55,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define NM_CHANGEUI			WM_USER	+ 40
 
+//wParam for hwnd, lParam for "type"
+#define NM_SETDIALOGLANG	WM_USER	+ 41
+
+//wParam: hmenu, lParam: "type"
+#define NM_SETPOPMENULANG	WM_USER	+ 42
+
+//lparam: TCHAR *
+#define NM_GETLANGPATH		WM_USER	+ 43
 #endif

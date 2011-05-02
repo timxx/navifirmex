@@ -25,8 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Zip/unzip.h"
 #include "Zip/zip.h"
 #include "DlgAbout.h"
-#include "DlgNew.h"
-
+#include "DlgCode.h"
 #include "curl/curl.h"
 #include "nm_message.h"
 #include "Tim/File.h"
@@ -34,15 +33,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "DlgConfirm.h"
 #include "DlgNewTask.h"
 #include "DlgConfig.h"
+#include "LangHelper.h"
 
 #pragma comment(lib, "shlwapi.lib")
 #pragma comment(lib, "Msimg32.lib")
 
 #pragma warning(disable:4018)
 //////////////////////////////////////////////////////////////////////////
-#define AGENT_NAME		"NaviFirmEx/1.3"
+#define AGENT_NAME		"NaviFirmEx/1.5"
 
-#define UPDATE_TIMER_ID	2
+#define UPDATE_TIMER_ID			2
 
 #define ASSERT_SERVER_INDEX(i)	if(i > 3 || i < 0) i = 1
 //////////////////////////////////////////////////////////////////////////
@@ -56,7 +56,96 @@ char *GUIWnd::_szServer[3] =
 //记录当前文件列表排序是升还是降
 bool gfsortUp = true;
 //////////////////////////////////////////////////////////////////////////
-BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+void GUIWnd::init(HINSTANCE hinst, HWND hwndParent)
+{
+	Window::init(hinst, hwndParent);
+
+	ClassEx cls(hinst, TEXT("NaviFirmExClass"), IDI_MAIN, IDR_MENU_MAIN, WndProc);
+
+	if (!cls.Register()){
+		throw std::runtime_error("GUIWnd::RegisterClassEx failed");
+	}
+
+	_hWnd = createEx(WS_EX_ACCEPTFILES,
+		TEXT("NaviFirmExClass"), TEXT("NOKIA固件下载器"),
+		WS_OVERLAPPEDWINDOW/* | WS_CLIPCHILDREN*/,			//WS_CLIPCHILDREN conflict with InvalidStatic
+		0, 0, 800, 480,
+		0, (LPVOID)this);
+
+	if (!_hWnd){
+		throw std::runtime_error("GUIWnd::CreateWindowEx failed");
+	}
+	
+	TString cfgPath = MakeFilePath(TEXT("\\Config.xml"));
+	if (!cfgPath.empty())
+	{	
+#ifdef UNICODE
+		int len = wtoa(cfgPath.c_str(), NULL);
+		char *apath = new char[len];
+		wtoa(cfgPath.c_str(), apath, len);
+ 		_pConfig = new Config(apath);
+		delete [] apath;
+#else
+		_pConfig = new Config(cfgPath.c_str());
+#endif
+	}
+	else
+	{
+		_pConfig = new Config("Config.xml");
+	}
+
+	ShowServer(_pConfig->getIndex());
+
+	//还原最后记录窗口位置
+	if (_pConfig->load())
+	{
+		Rect rect = _pConfig->getGUIRect();
+
+		if (!rect.IsRectEmpty()){
+			MoveWindow(rect.left, rect.top, rect.Width(), rect.Height());
+		}
+
+		if (_pConfig->isGUIMaxed())
+			::ShowWindow(_hWnd, SW_SHOWMAXIMIZED);
+		else
+			showWindow();
+
+	}
+	else
+	{
+		showWindow();
+		centerWnd();
+	}
+
+	UpdateWindow();
+
+	LoadLanguage();
+
+	_hbmpProcess = LoadBitmap(_hinst, MAKEINTRESOURCE(IDB_PROCESS));
+
+	LoadSession();
+}
+//////////////////////////////////////////////////////////////////////////
+LRESULT CALLBACK GUIWnd::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_NCCREATE :
+		{
+			GUIWnd *pWnd = (GUIWnd *)(((LPCREATESTRUCT)lParam)->lpCreateParams);
+			pWnd->_hWnd = hWnd;
+			::SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pWnd);
+			return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+		}
+
+	default:
+		return ((GUIWnd *)::GetWindowLongPtr(hWnd, GWL_USERDATA))->runProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	return 0;
+}
+//////////////////////////////////////////////////////////////////////////
+LRESULT CALLBACK GUIWnd::runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch(uMsg)
 	{
@@ -68,15 +157,29 @@ BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		OnNotify(int(wParam), (NMHDR*)lParam);
 		break;
 
+	case WM_SIZE:
+		OnSize(LOWORD(lParam), HIWORD(lParam));
+		break;
+
 	case WM_PAINT:
 		OnPaint();
 		break;
 
-	case WM_INITDIALOG:
-		//OnInit();
-		//解决程序运行时窗口有时透明的问题
-		PostMessage(_hWnd, NM_INIT, 0, 0);
-		return TRUE;
+	case WM_ERASEBKGND:
+	//since WS_CLIPCHILDREN make the labels disappear
+	//though it will flash
+	//but it's the way work fine I found so far
+		if (_hbmpBkgnd)
+		{
+			Rect rect;
+			GetClientRect(&rect);
+			DrawBitmap(_hbmpBkgnd, HDC(wParam), rect);
+		}
+		return 0;
+
+	case WM_CREATE:
+		OnCreate(reinterpret_cast<LPCREATESTRUCT>(lParam));
+		break;
 
 	case WM_MENUSELECT:
 		{
@@ -85,8 +188,12 @@ BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
-	case NM_INIT:
-		OnInit();
+	case WM_GETMINMAXINFO:
+		{
+			MINMAXINFO *pmmi = (MINMAXINFO*)lParam;
+			pmmi->ptMinTrackSize.x = 600;
+			pmmi->ptMinTrackSize.y = 330;
+		}
 		break;
 
 	case WM_INITMENU:
@@ -100,7 +207,7 @@ BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_TIMER:
 		if (wParam == UPDATE_TIMER_ID)
 		{
-			UpdateStatus(TEXT(""));
+			UpdateStatus(NULL, TEXT(""));
 			KillTimer(UPDATE_TIMER_ID);
 		}
 		break;
@@ -118,12 +225,12 @@ BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			_lvFile.DeleteAllItems();
 			//Mar. 20, 2011
 			//修正通过CODE下载时没更新显示
-			SetItemText(IDS_FILE_LIST, TEXT("(0)"));
+			_labelFiles.setText(TEXT("(0)"));
 			_hTreadGetFileList = CreateThread(0, 0, GetFileListByCodeProc, this, 0, NULL);
 			if (_hTreadGetFileList == INVALID_HANDLE_VALUE){
-				msgBox(TEXT("创建线程时出错了！"), TEXT("错误"), MB_ICONERROR);
+				msgBox("ThreadErr", TEXT("创建线程时出错了！"), TEXT("错误"), MB_ICONERROR);
 			}else{
-				_imgProcess->Play();
+				_status.Play();
 			}
 
 			delete [] code;
@@ -216,16 +323,17 @@ BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case NM_DOWNFINISH:
 		sendMsg(NM_TASKBAR, 100);	//防止任务管理获取的进度不准的情况
 		KillTimer(UPDATE_TIMER_ID);
-		UpdateStatus(TEXT("全部下载任务已完成"));
+		UpdateStatus("Finish", TEXT("全部下载任务已完成"));
 		SetTimer(UPDATE_TIMER_ID, 5000);
 		break;
 
-	case WM_CTLCOLORSTATIC:
-		SetBkMode(HDC(wParam), TRANSPARENT);
-		return (BOOL)GetStockObject(NULL_BRUSH);
+ 	case WM_CTLCOLORSTATIC:
+ 		SetBkMode(HDC(wParam), TRANSPARENT);
+ 		return (BOOL)GetStockObject(NULL_BRUSH);
 
 	case NM_CHANGEUI:
 		InitBackground();
+// 		InvalidateRect(NULL, TRUE);
 		break;
 
 	case NM_SHOWTASKMGR:
@@ -238,10 +346,48 @@ BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
+	case NM_SETDIALOGLANG:
+		if (wParam != 0 && lParam != 0)
+		{
+			LangHelper lang;
+			if (PrepareLang(lang)){
+				lang.SetDialog(HWND(wParam), (char*)lParam);
+			}
+		}
+		break;
+
+	case NM_SETPOPMENULANG:
+		if (wParam != 0 && lParam != 0)
+		{
+			LangHelper lang;
+			if (PrepareLang(lang)){
+				lang.SetPopupMenu(HMENU(wParam), (char*)lParam);
+			}
+		}
+		break;
+
+	case NM_GETLANGPATH:
+		{
+			TCHAR *path = (TCHAR*)lParam;
+			*path = 0;
+
+			if (_curLangIndex == -1)
+				break;
+			if (_vLang.empty())
+				break;
+			if (_curLangIndex >= _vLang.size())
+				break;
+
+			lstrcpy(path, _vLang[_curLangIndex]);
+		}
+		break;
+		
 	default:
 		if (uMsg == WM_TASKBARBUTTONCREATED){
 			InitTaskBar();
 		}
+
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
 	return 0;
@@ -249,33 +395,39 @@ BOOL CALLBACK GUIWnd::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 //////////////////////////////////////////////////////////////////////////
 void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 {
-	switch(id)
+	if (hwndCtl == _lbProduct.getSelf())
 	{
-	case IDC_LIST_PRODUCT:	//改变型号
 		if (uNotifyCode == LBN_SELCHANGE)
 			doProductChange();
-		break;
-
-	case IDC_LIST_RELEASE:	//版本改变
+	}
+	else if (hwndCtl == _lbRelease.getSelf())
+	{
 		if (uNotifyCode == LBN_SELCHANGE)
 			doReleaseChange();
-		break;
 
-	case IDC_LIST_VARIANT:	//Variant改变
+	}
+	else if (hwndCtl == _lbVariant.getSelf())
+	{
 		if (uNotifyCode == LBN_SELCHANGE)
 			doVariantChange();
-		break;
-
-	case IDE_PRODUCT_FILTER:	//型号过滤
+	}
+	else if (hwndCtl == _edProduct.getSelf())
+	{
 		if (uNotifyCode == EN_CHANGE)
 			doProductFilter();
-		break;
-
-	case IDE_VARIANT_FILTER:	//variant过滤
+	}
+	else if (hwndCtl == _edVariant.getSelf())
+	{
 		if (uNotifyCode == EN_CHANGE)
 			doVariantFilter();
-		break;
+	}
+	else if (hwndCtl == _btnDownload.getSelf())
+	{
+		doDownLoad();
+	}
 
+	switch(id)
+	{
 	case IDM_SEL_ALL:	//全选/取消全选
 	case IDM_SEL_NULL:
 		doSelAll(id == IDM_SEL_ALL);
@@ -285,10 +437,6 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 	case IDM_COPY_SELECTION:
 	case IDM_COPY_ALL:
 		doCopyUrl(id);
-		break;
-
-	case IDB_DOWNLOAD:
-		doDownLoad();
 		break;
 
 	case IDM_REFRESH:
@@ -323,11 +471,11 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 		sendMsg(WM_CLOSE);
 		break;
 
-	case IDM_NEW:
+	case IDM_CODE_SEARCH:
 		{
 			DlgNew newDlg;
 			newDlg.init(_hinst, _hWnd);
-			newDlg.doModal(IDD_NEW_DOWN);
+			newDlg.doModal(IDD_CODE);
 		}
 		break;
 
@@ -358,7 +506,7 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 			}
 			else
 			{
-				msgBox(TEXT("详细请登陆塞班论坛，链接：\r\n")
+				msgBox(NULL, TEXT("详细请登陆塞班论坛，链接：\r\n")
 					TEXT("http://bbs.dospy.com/thread-10732732-1-341-1.html\r\n")
 					TEXT("（可按下Ctrl+C复制信息）"),
 					TEXT("帮助"),
@@ -380,6 +528,9 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 		{
 			ValidTaskMgr();
 
+			if (_pConfig && _pConfig->showTaskMgr())
+				_taskMgr->showWindow();
+
 			list<TiFile> vlist = _nvFile->getlist();
 			list<TiFile>::iterator it = vlist.begin();
 
@@ -389,7 +540,7 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 		}
 		else
 		{
-			msgBox(TEXT("无文件可下载！"), TEXT("继续下载"), MB_ICONINFORMATION);
+			msgBox("TaskCon", TEXT("无文件可下载！"), TEXT("继续下载"), MB_ICONINFORMATION);
 		}
 
 		{
@@ -408,6 +559,23 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 			dlgCfg.doModal(IDD_CONFIG, _pConfig);
 		}
 		break;
+
+	default:
+		{
+			if (id > IDM_LANG_DEFAULT)
+			{
+				int index = id - IDM_LANG_DEFAULT - 1;
+
+				if (index >= _vLang.size())
+					return ;
+
+				if (SetLanguage(index))
+				{
+					CheckMenuRadioItem(GetMenu(), IDM_LANG_DEFAULT + 1,
+						IDM_LANG_DEFAULT + _vLang.size(), id, MF_CHECKED);
+				}
+			}
+		}
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -416,7 +584,7 @@ void GUIWnd::OnNotify(int id, NMHDR *pnmh)
 	switch(pnmh->code)
 	{
 	case NM_RCLICK:
-		ShowPopupMenu();
+		PopupFileListMenu();
 		break;
 
 	case LVN_ITEMCHANGED:
@@ -477,15 +645,15 @@ void GUIWnd::OnPaint()
 	//Fixed bug when restore window child controls
 	//will be covered by background
 	//Apr. 13, 2011
-	ExcludeChildRect(hdc);
+	//ExcludeChildRect(hdc);
 
-	if (_hbmpBkgnd)
-	{
-		Rect rect;
-		GetClientRect(&rect);
-
-		DrawBitmap(_hbmpBkgnd, hdc, rect);
-	}
+// 	if (_hbmpBkgnd)
+// 	{
+// 		Rect rect;
+// 		GetClientRect(&rect);
+// 
+// 		DrawBitmap(_hbmpBkgnd, hdc, rect);
+// 	}
 
 	if (_hbmpPhone) //
 	{
@@ -493,7 +661,7 @@ void GUIWnd::OnPaint()
 		HGDIOBJ hOldObj = SelectObject(hdcMem, _hbmpPhone);
 
 		Rect rect;
-		::GetWindowRect(HwndFromId(IDS_FRAME), &rect);
+		_picFrame.GetWindowRect(&rect);
 		ScreenToClient(&rect);
 
 		BITMAP bmp = {0};
@@ -521,169 +689,6 @@ void GUIWnd::OnPaint()
 	EndPaint(_hWnd, &ps);
 }
 //////////////////////////////////////////////////////////////////////////
-void GUIWnd::OnInit()
-{
-	InitCommonControls();
-	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-	Gdiplus::GdiplusStartup(&_gdiplusToken, &gdiplusStartupInput, NULL);
-
-	OSVERSIONINFO ovi = {0};
-	ovi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	if (GetVersionEx(&ovi))
-	{
-		//Win7 => v6.1
-		if (ovi.dwMajorVersion >= 6 &&
-			ovi.dwMinorVersion >= 1
-			)
-		{
-			WM_TASKBARBUTTONCREATED = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
-			_fDisableTaskbar = FALSE;
-		}
-	}
-
-	SetDlgIcon(IDI_MAIN);
-
-	TString cfgPath = MakeFilePath(TEXT("\\Config.xml"));
-	if (!cfgPath.empty())
-	{	
-#ifdef UNICODE
-		int len = wtoa(cfgPath.c_str(), NULL);
-		char *apath = new char[len];
-		wtoa(cfgPath.c_str(), apath, len);
-		_pConfig = new Config(apath);
-		delete [] apath;
-#else
-		_pConfig = new Config(cfgPath.c_str());
-#endif
-	}
-	else
-	{
-		_pConfig = new Config("Config.xml");
-	}
-
-	//还原最后记录窗口位置
-	if (_pConfig->load()){
-		moveTo(_pConfig->getXPos(), _pConfig->getYPos());
-	}
-
-	InitBackground();
-
-	_status.init(_hinst, _hWnd);
-	_status.create();
-
-	_edProduct.assign(IDE_PRODUCT_FILTER, _hWnd);
-	_edVariant.assign(IDE_VARIANT_FILTER, _hWnd);
-
-	_lbProduct.assign(IDC_LIST_PRODUCT, _hWnd);
-	_lbRelease.assign(IDC_LIST_RELEASE, _hWnd);
-	_lbVariant.assign(IDC_LIST_VARIANT, _hWnd);
-	_lvFile.assign(IDC_LIST_FILES, _hWnd);
-
-	_btnDownload.assign(IDB_DOWNLOAD, _hWnd);
-
-	_lvFile.SetExtendedStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP );
-
-	LVCOLUMN lvColumn = {0};
-
-	lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-	lvColumn.fmt = LVCFMT_LEFT;
-
-	lvColumn.pszText = TEXT("文件名");
-	lvColumn.cx = 150;
-	_lvFile.InsertColumn(0, &lvColumn);
-
-	lvColumn.pszText = TEXT("大小");
-	lvColumn.cx = 70;
-	_lvFile.InsertColumn(1, &lvColumn);
-
-	//_lvFile.SetHoverTime(10);
-
-	_imgProcess = new Gdiplus::ImageEx(_hinst, MAKEINTRESOURCE(IDR_GIF_PROCESS), TEXT("GIF"));
-
-	int nParts[4] = {32, _status.getWidth()*5/7, _status.getWidth()*5/7 + 75, -1};
-	_status.SetParts(4, nParts);
-	ShowServer(_pConfig->getIndex());
-
-	Rect rect;
-	_status.GetRect(0, &rect);
-
-	int x = rect.left + (rect.Width() - 16)/2;
-	int y = rect.top + (rect.Height() - 16)/2;
-
-	_imgProcess->InitAnimation(_status.getSelf(), x, y);
-
-	 _hThreadProduct = CreateThread(0, 0, GetProductListProc, this, 0, 0);
-
- 	if (_hThreadProduct == INVALID_HANDLE_VALUE)
- 	{
-		_imgProcess->Pause();
-
-		UpdateStatus(TEXT("创建线程出错了，获取产品列表失败……"));
-
- 		msgBox(TEXT("GUIWnd::OnInit: 创建线程出错了"), TEXT("Error"), MB_ICONERROR);
- 	}
-
-	TString nve = MakeFilePath(TEXT("task.nve"));
-
-	if (File::Exists(nve))
-	{
-		_nvFile = new NveFile;
-
-		if (_nvFile->load(nve))
-		{
-			BOOL fYes = TRUE;
-			if (_pConfig)
-			{
-				if (_pConfig->downloadWithPompt())
-				{
-					DlgConfirm confirm;
-
-					confirm.init(getHinst(), getSelf());
-					confirm.setTitle(TEXT("继续下载"));
-					confirm.setText(TEXT("是否继续下载上次未完成的任务？"));
-
-					confirm.doModal(IDD_CONFIRM);
-					bool fPrompt;
-					fYes = confirm.getResult(fPrompt);
-					_pConfig->setDownPrompt(fPrompt);
-					_pConfig->setDownAction(fYes);
-				}
-			}
-
-			if (fYes)
-			{
-				ValidTaskMgr();
-
-				if (_pConfig)
-				{
-					if (_pConfig->showTaskMgr())
-						_taskMgr->showWindow();
-				}
-				else
-				{
-					_taskMgr->showWindow();
-				}
-
-				list<TiFile> vlist = _nvFile->getlist();
-				list<TiFile>::iterator it = vlist.begin();
-
-				for ( ; it != vlist.end(); it++){
-					_taskMgr->newTask(*it);
-				}
-			}
-			else
-			{
-				HMENU hMenu = GetMenu();
-				hMenu = GetSubMenu(hMenu, 0);
-				InsertMenu(hMenu, 2, MF_BYPOSITION | MF_BYCOMMAND, IDM_DOWN_CONTINUE, TEXT("继续下载(&I)"));
-				InsertMenu(hMenu, 3, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
-			}
-		}
-
-		File::Delete(nve);
-	}
-}
-//////////////////////////////////////////////////////////////////////////
 void GUIWnd::OnClose()
 {
 	if (_taskMgr)
@@ -699,6 +704,8 @@ void GUIWnd::OnClose()
 					confirm.init(getHinst(), getSelf());
 					confirm.setTitle(TEXT("关闭程序"));
 					confirm.setText(TEXT("还有下载任务在进行，确定要中止下载并退出程序吗？"));
+
+					SetConfirmLang(confirm, "Exit");
 
 					confirm.doModal(IDD_CONFIRM);
 					bool fPrompt;
@@ -722,10 +729,6 @@ void GUIWnd::OnClose()
 //////////////////////////////////////////////////////////////////////////
 void GUIWnd::OnDestroy()
 {
-	if (_imgProcess){
-		delete _imgProcess;
-	}
-
 	EndThread(_hThreadProduct);
 	EndThread(_hThreadRelease);
 	EndThread(_hThreadVariant);
@@ -741,7 +744,11 @@ void GUIWnd::OnDestroy()
 		Rect rect;
 		GetWindowRect(&rect);
 
-		_pConfig->setPos(Point(rect.left, rect.top));
+		if (isMaximized()){
+			_pConfig->setGUIRect(_pConfig->getGUIRect(), TRUE);
+		} else {
+			_pConfig->setGUIRect(rect, FALSE);
+		}
 
 		if (_taskMgr)
 		{
@@ -779,10 +786,6 @@ void GUIWnd::OnDestroy()
 		delete _nvFile;
 	}
 
-	if (_gdiplusToken){
-		Gdiplus::GdiplusShutdown(_gdiplusToken);
-	}
-
 	if (_pTaskbar){
 		_pTaskbar->Release();
 	}
@@ -793,6 +796,10 @@ void GUIWnd::OnDestroy()
 
 	if (_hbmpBkgnd){
 		DeleteObject(_hbmpBkgnd);
+	}
+
+	if (_hFontChild){
+		DeleteObject(_hFontChild);
 	}
 
 	PostQuitMessage(0);
@@ -887,16 +894,10 @@ void GUIWnd::doProductChange()
 	EndThread(_hThreadRelease);
 
 	_hThreadRelease = CreateThread(0, 0, GetReleaseListProc, this, 0, 0);
-	if (_hThreadRelease == INVALID_HANDLE_VALUE)
-	{
-		DWORD dwErr = GetLastError();
-		TString info;
-		info.format(TEXT("GUIWnd::doProductChange: 创建线程出错了[%d]"), dwErr);
-		msgBox(info, TEXT("错误"), MB_ICONERROR);
-	}
-	else
-	{
-		_imgProcess->Play();
+	if (_hThreadRelease == INVALID_HANDLE_VALUE){
+		msgBox("ThreadErr", TEXT("创建线程出错了"), TEXT("错误"), MB_ICONERROR);
+	}else{
+		_status.Play();
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -924,9 +925,9 @@ void GUIWnd::doReleaseChange()
 	_hThreadVariant = CreateThread(0, 0, GetVariantListProc, this, 0, 0);
 
 	if (_hThreadVariant == INVALID_HANDLE_VALUE){
-		msgBox(TEXT("GUIWnd::doReleaseChange: 创建线程出错了"), TEXT("Error"), MB_ICONERROR);
+		msgBox("ThreadErr", TEXT("GUIWnd::doReleaseChange: 创建线程出错了"), TEXT("Error"), MB_ICONERROR);
 	}else{
-		_imgProcess->Play();
+		_status.Play();
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -997,9 +998,9 @@ void GUIWnd::doCopyUrl(UINT cmd)
 	if (!urlStr.empty())
 	{
 		if (!CopyTextToClipbrd(urlStr.c_str()))
-			msgBox(TEXT("复制URL到剪贴板失败！"), TEXT("复制URL"), MB_ICONERROR);
+			msgBox("Clipbrd", TEXT("复制URL到剪贴板失败！"), TEXT("复制URL"), MB_ICONERROR);
 		else
-			UpdateStatus(TEXT("成功复制URL到系统剪贴板"));
+			UpdateStatus("CopyUrl", TEXT("成功复制URL到系统剪贴板"));
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -1028,8 +1029,8 @@ void GUIWnd::doRefresh(bool fNeedACK/* = true*/)
 	if (fNeedACK)
 	{
 		if (
-			msgBox(TEXT("确定要刷新产品吗？这将清空所有缓存文件！"),
-			TEXT("请确认"), MB_ICONQUESTION | MB_YESNO) == IDNO
+			msgBox("Refresh", TEXT("确定要刷新产品吗？这将清空所有缓存文件！"),
+				TEXT("请确认"), MB_ICONQUESTION | MB_YESNO) == IDNO
 			)
 			return ;
 	}
@@ -1048,16 +1049,16 @@ void GUIWnd::doRefresh(bool fNeedACK/* = true*/)
 
 	TString().swap(_jsessionidStr);
 
-	::SendDlgItemMessage(_hWnd, IDS_PRODUCT, WM_SETTEXT, 0, (LPARAM)TEXT("(0/0)"));
-	::SendDlgItemMessage(_hWnd, IDS_RELEASE, WM_SETTEXT, 0, (LPARAM)TEXT("(0)"));
-	::SendDlgItemMessage(_hWnd, IDS_VARIANT, WM_SETTEXT, 0, (LPARAM)TEXT("(0/0)"));
-	::SendDlgItemMessage(_hWnd, IDS_FILE_LIST, WM_SETTEXT, 0, (LPARAM)TEXT("(0)"));
+	_labelProductsCount.setText(TEXT("(0/0)"));
+	_labelReleasesCount.setText(TEXT("(0)"));
+	_labelVariantsCount.setText(TEXT("(0/0)"));
+	_labelFilesCount.setText(TEXT("(0)"));
 
 	//fixed: Apr. 12, 2011
-	InvalidStatic(IDS_PRODUCT);
-	InvalidStatic(IDS_RELEASE);
-	InvalidStatic(IDS_VARIANT);
-	InvalidStatic(IDS_FILE_LIST);
+	InvalidStatic(_labelProductsCount);
+	InvalidStatic(_labelReleasesCount);
+	InvalidStatic(_labelVariantsCount);
+	InvalidStatic(_labelFilesCount);
 
 	list<Product>().swap(_lProduct);
 	list<Product>().swap(_lProductFilter);
@@ -1078,9 +1079,9 @@ void GUIWnd::doRefresh(bool fNeedACK/* = true*/)
 	_hThreadProduct = CreateThread(0, 0, GetProductListProc, this, NULL, NULL);
 
 	if (_hThreadProduct == INVALID_HANDLE_VALUE){
-		msgBox(TEXT("无法创建获取产品线程！！"), TEXT("出错了"), MB_ICONERROR);
+		msgBox("ThreadErr", TEXT("无法创建获取产品线程！！"), TEXT("出错了"), MB_ICONERROR);
 	}else{
-		_imgProcess->Play();
+		_status.Play();
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -1122,7 +1123,7 @@ back:
 	}
 	else
 	{
-		pWnd->UpdateStatus(TEXT("正在读取缓存文件……"));
+		pWnd->UpdateStatus("ReadCache", TEXT("正在读取缓存文件……"));
 
 		data = GetFileDataFromZip(productFile, TEXT("products.xml"), dwSize);
 		if (!data)
@@ -1139,11 +1140,13 @@ back:
 	pWnd->ShowProducts();
 
 _exit:
+
+	pWnd->_status.Pause();
+
 	if (pWnd->_lProduct.empty()){
-		pWnd->_lbProduct.AddString(TEXT("<空>"));
+		pWnd->_lbProduct.AddString(TEXT("<null>"));
 	}
-	pWnd->_imgProcess->Pause();
-	pWnd->UpdateStatus(TEXT("结束获取产品列表……"));
+	pWnd->UpdateStatus("EndProductThread", TEXT("结束获取产品列表……"));
 	pWnd->SetTimer(UPDATE_TIMER_ID, 3000);
 
 	PostMessage(pWnd->getSelf(), NM_ENDTHREAD, 0, (LPARAM)(&(pWnd->_hThreadProduct)));
@@ -1154,10 +1157,7 @@ _exit:
 int GUIWnd::ReadProduct(const char *data, DWORD dwSize)
 {
 	if (!data)
-	{
-		UpdateStatus(TEXT("数据无效，获取产品列表失败……"));
 		return 0;
-	}
 
 	int ret = 0;
 
@@ -1169,24 +1169,30 @@ int GUIWnd::ReadProduct(const char *data, DWORD dwSize)
 
 	if (pXmlDoc->Error())
 	{
-		UpdateStatus(TEXT("TinyXml::Parse数据出错"));
+		UpdateStatus(NULL, TEXT("TinyXml::Parse Failed"));
 		goto _exit;
 	}
 
 	if (IsErrorInfo(pXmlDoc, errInfo))
 	{
-		UpdateStatus(TEXT("获取产品列表失败"));
+		UpdateStatus(NULL, TEXT("获取产品列表失败"));
 
-		TString str(TEXT("获取产品列表时发生错误，服务器返回信息：\r\n"));
-		str += errInfo;
-		msgBox(str, TEXT("获取产品列表失败"), MB_ICONERROR);
+		LangHelper lang;
+		TString text = TEXT("获取产品列表时发生错误，服务器返回信息：");
+		TString title = TEXT("获取产品列表失败");
+		if (PrepareLang(lang)){
+			lang.GetMsgBox("ServerErr_Product", text, title);
+		}
+		text += TEXT("\r\n") + errInfo;
+
+		Window::msgBox(text, title, MB_ICONERROR);
 
 		goto _exit;
 	}
 
 	//不存在Cache文件夹
 	if (!PathFileExists(cacheFolder)){
-		CreateDirectory(cacheFolder, NULL);
+		File::MakeDir(cacheFolder);
 	}
 	cacheFolder += TEXT("\\86024CAD1E83101D97359D7351051156");
 	if (FileNeedUpdate(cacheFolder)){
@@ -1208,7 +1214,7 @@ int GUIWnd::ReadProduct(const char *data, DWORD dwSize)
 
 	TiXmlNode *nodeProduct = nodeResult->FirstChild("product");
 
-	UpdateStatus(TEXT("正在分析返回数据……"));
+	UpdateStatus("Parsing", TEXT("正在分析返回数据……"));
 
 	for (; nodeProduct; nodeProduct = nodeProduct->NextSibling()){
 		GetProductInfo(nodeProduct);
@@ -1216,7 +1222,6 @@ int GUIWnd::ReadProduct(const char *data, DWORD dwSize)
 
 	ret = 1;
 _exit:
-
 	
 	if (pXmlDoc)
 		delete pXmlDoc;
@@ -1283,7 +1288,7 @@ DWORD WINAPI GUIWnd::GetReleaseListProc(LPVOID lParam)
 
 	if (pWnd->_hTreadGetImage != INVALID_HANDLE_VALUE)
 	{
-		pWnd->UpdateStatus(TEXT("等待图片下载……"));
+		pWnd->UpdateStatus("WaitPic", TEXT("等待图片下载……"));
 
 		WaitForSingleObject(pWnd->_hTreadGetImage, 5000);
 		CloseHandle(pWnd->_hTreadGetImage);
@@ -1331,18 +1336,17 @@ back:
 
 _exit:
 	if (pWnd->_vRelease.empty()){
-		pWnd->_lbRelease.AddString(TEXT("<空>"));
+		pWnd->_lbRelease.AddString(TEXT("<null>"));
 	}
-
-	pWnd->_imgProcess->Pause();
 
 	if (fNeedClear && data)
 		delete [] data;
 
-	pWnd->UpdateStatus(TEXT("结束获取发行版本列表……"));
+	pWnd->UpdateStatus("EndReleaseThread", TEXT("结束获取发行版本列表……"));
 
 	pWnd->SetTimer(UPDATE_TIMER_ID, 5000);
 
+	pWnd->_status.Pause();
 	PostMessage(pWnd->getSelf(), NM_ENDTHREAD, 0, reinterpret_cast<LPARAM>(&(pWnd->_hThreadRelease)));
 
 	return 1;
@@ -1351,10 +1355,7 @@ _exit:
 int GUIWnd::ReadRelease(const char *data, DWORD dwSize, const TString &productID)
 {
 	if (!data)
-	{
-		UpdateStatus(TEXT("无效数据，读取发行版本数据失败……"));
 		return 0;
-	}
 
 	int ret = 0;
 
@@ -1366,23 +1367,30 @@ int GUIWnd::ReadRelease(const char *data, DWORD dwSize, const TString &productID
 
 	if (pXmlDoc->Error())
 	{
-		UpdateStatus(TEXT("TinyXml::Parse数据出错"));
+		UpdateStatus(NULL, TEXT("TinyXml::Parse Failed"));
 		goto _exit;
 	}
 
 	if (IsErrorInfo(pXmlDoc, errInfo))
 	{
-		UpdateStatus(TEXT("获取发行版本列表失败"));
-		TString str(TEXT("获取发行版本列表时发生错误，服务器返回信息：\r\n"));
-		str += errInfo;
-		msgBox(str, TEXT("获取发行版本列表失败"), MB_ICONERROR);
+		UpdateStatus(NULL, TEXT("获取发行版本列表失败"));
+
+		LangHelper lang;
+		TString text = TEXT("获取发行版本列表时发生错误，服务器返回信息：");
+		TString title = TEXT("获取发行版本列表失败");
+		if (PrepareLang(lang)){
+			lang.GetMsgBox("ServerErr_Release", text, title);
+		}
+		text += TEXT("\r\n") + errInfo;
+
+		Window::msgBox(text, title, MB_ICONERROR);
 
 		goto _exit;
 	}
 
 
 	if (!PathFileExists(folder.c_str()))
-		CreateDirectory(folder.c_str(), NULL);
+		File::MakeDir(folder);
 
 	folder += TEXT("\\02B67C3EAE678DC49209D6DE4709A171");
 	if (!FileExistsZip(folder, productID))
@@ -1403,7 +1411,7 @@ int GUIWnd::ReadRelease(const char *data, DWORD dwSize, const TString &productID
 
 	TiXmlNode *nodeRelease = nodeResult->FirstChild("release");
 
-	UpdateStatus(TEXT("正在分析返回数据……"));
+	UpdateStatus("Parsing", TEXT("正在分析返回数据……"));
 
 	for (; nodeRelease; nodeRelease = nodeRelease->NextSibling()){
 		GetReleaseInfo(nodeRelease);
@@ -1488,17 +1496,15 @@ back:
 
 _exit:
 	if (pWnd->_lVariant.empty()){
-		pWnd->_lbVariant.AddString(TEXT("<空>"));
+		pWnd->_lbVariant.AddString(TEXT("<null>"));
 	}
-
-	pWnd->_imgProcess->Pause();
 
 	if (fNeedClear && data)
 		delete [] data;
 
-	pWnd->UpdateStatus(TEXT("结束获取CODE列表……"));
+	pWnd->UpdateStatus("EndVariantThread", TEXT("结束获取CODE列表……"));
 	pWnd->SetTimer(UPDATE_TIMER_ID, 5000);
-
+	pWnd->_status.Pause();
 	PostMessage(pWnd->getSelf(), NM_ENDTHREAD, 0, reinterpret_cast<LPARAM>(&(pWnd->_hThreadVariant)));
 
 	return 1;
@@ -1507,10 +1513,7 @@ _exit:
 int GUIWnd::ReadVariant(const char *data, DWORD dwSize, const TString &releaseID)
 {
 	if (!data)
-	{
-		UpdateStatus(TEXT("无效数据，读取CODE列表数据失败……"));
 		return 0;
-	}
 
 	int ret = 0;
 	TString folder = MakeFilePath(TEXT("Cache"));
@@ -1526,11 +1529,17 @@ int GUIWnd::ReadVariant(const char *data, DWORD dwSize, const TString &releaseID
 
 	if (IsErrorInfo(pXmlDoc, errInfo))
 	{
-		UpdateStatus(TEXT("获取CODE列表失败"));
+		UpdateStatus(NULL, TEXT("获取CODE列表失败"));
 
-		TString str(TEXT("获取CODE列表时发生错误，服务器返回信息：\r\n"));
-		str += errInfo;
-		msgBox(str, TEXT("获取CODE列表失败"), MB_ICONERROR);
+		LangHelper lang;
+		TString text = TEXT("获取CODE列表时发生错误，服务器返回信息：");
+		TString title = TEXT("获取CODE列表失败");
+		if (PrepareLang(lang)){
+			lang.GetMsgBox("ServerErr_Variant", text, title);
+		}
+		text += TEXT("\r\n") + errInfo;
+
+		Window::msgBox(text, title, MB_ICONERROR);
 
 		goto _exit;
 	}
@@ -1559,7 +1568,7 @@ int GUIWnd::ReadVariant(const char *data, DWORD dwSize, const TString &releaseID
 
 	TiXmlNode *nodeVariant = nodeResult->FirstChild("variant");
 
-	UpdateStatus(TEXT("正在分析返回数据……"));
+	UpdateStatus("Parsing", TEXT("正在分析返回数据……"));
 
 	for (; nodeVariant; nodeVariant = nodeVariant->NextSibling()){
 		GetVariantInfo(nodeVariant, bodyNode);
@@ -1687,9 +1696,9 @@ void GUIWnd::ShowProducts()
 	ReleaseDC(_hWnd, hdc);
 
 	tmpStr.format(TEXT("(%d/%d)"), _lProductFilter.size(), _lProduct.size());
-	SendItemMsg(IDS_PRODUCT, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(tmpStr.c_str()));
+	_labelProductsCount.setText(tmpStr);
 
-	InvalidStatic(IDS_PRODUCT);
+	InvalidStatic(_labelProductsCount);
 }
 //////////////////////////////////////////////////////////////////////////
 bool release_cmp(const Release &lhs, const Release &rhs){
@@ -1710,9 +1719,10 @@ void GUIWnd::ShowReleases()
 
 	TString tmpStr;
 	tmpStr.format(TEXT("(%d)"), _vRelease.size());
-	SendItemMsg(IDS_RELEASE, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(tmpStr.c_str()));
 
-	InvalidStatic(IDS_RELEASE);
+	_labelReleasesCount.setText(tmpStr);
+
+	InvalidStatic(_labelReleasesCount);
 }
 //////////////////////////////////////////////////////////////////////////
 bool variant_cmp(const Variant &lhs, const Variant &rhs)
@@ -1775,17 +1785,17 @@ void GUIWnd::ShowVariants()
 	ReleaseDC(_hWnd, hdc);
 
 	tmpStr.format(TEXT("(%d/%d)"), _lVariantFilter.size(), _lVariant.size());
-	SendItemMsg(IDS_VARIANT, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(tmpStr.c_str()));
+	_labelVariantsCount.setText(tmpStr);
 
-	InvalidStatic(IDS_VARIANT);
+	InvalidStatic(_labelVariantsCount);
 }
 //////////////////////////////////////////////////////////////////////////
-void GUIWnd::ShowPopupMenu()
+void GUIWnd::PopupFileListMenu()
 {
 	if (_lvFile.GetItemCount() == 0 )
 		return ;
 
-	HMENU hMenu = LoadMenu(IDR_MENU_RKEY);
+	HMENU hMenu = LoadMenu(IDR_MENU_FILELIST);
 	if (!hMenu)	return ;
 
 	HMENU hMenuTP = ::GetSubMenu(hMenu, 0);
@@ -1805,6 +1815,8 @@ void GUIWnd::ShowPopupMenu()
 	if (!bFlag){
 		::EnableMenuItem(hMenuTP, IDM_COPY_SELECTION, MF_BYCOMMAND | MF_DISABLED);
 	}
+
+	SendMessage(_hWnd, NM_SETPOPMENULANG, (WPARAM)hMenuTP, (LPARAM)"File");
 
 	POINT pt;
 	::GetCursorPos(&pt);
@@ -1860,7 +1872,7 @@ void GUIWnd::ShowPhonePicture(const Product &curProduct)
 	}
 
 	Rect rect;
-	::GetWindowRect(HwndFromId(IDS_FRAME), &rect);
+	_picFrame.GetWindowRect(&rect);
 	ScreenToClient(&rect);
 
 	if (_hbmpPhone)
@@ -2003,16 +2015,11 @@ void GUIWnd::DownloadImage(const TString &url, const TString &fileSave)
 				_hbmpPhone = ImageFileToHBitmap(fileSave);
 
 				Rect rect;
-				::GetWindowRect(HwndFromId(IDS_FRAME), &rect);
+				_picFrame.GetWindowRect(&rect);
 				ScreenToClient(&rect);
 
 				InvalidateRect(&rect, TRUE);
 			}
-			else
-			{
-				msgBox(TEXT("解压ZIP失败！"), TEXT("获取图片失败"), MB_ICONERROR);
-			}
-
 			break;
 		}
 	}
@@ -2106,7 +2113,7 @@ void GUIWnd::ExportProductToText()
 	if (!productData.empty())
 	{
 		if (!SaveExportText(TEXT("Products.txt"), productData))
-			msgBox(TEXT("保存文件失败！！"), TEXT("导出文本"), MB_ICONERROR);
+			msgBox("ExportTxt", TEXT("保存文件失败！！"), TEXT("导出文本"), MB_ICONERROR);
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -2197,7 +2204,7 @@ void GUIWnd::ExportVariantToText()
 	if (!productData.empty())
 	{
 		if (!SaveExportText(TEXT("Variants.txt"), productData))
-			msgBox(TEXT("保存文件失败！！"), TEXT("导出文本"), MB_ICONERROR);
+			msgBox("ExportTxt", TEXT("保存文件失败！！"), TEXT("导出文本"), MB_ICONERROR);
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -2289,7 +2296,6 @@ DWORD WINAPI GUIWnd::GetFileListByCodeProc(LPVOID lParam)
 	GUIWnd *pWnd = (GUIWnd*)lParam;
 
 	if (!pWnd){
-		MessageBox(0, TEXT("GUIWnd::GetVariantProc: 无效传递"), TEXT("Error"), MB_ICONERROR);
 		return 0;
 	}
 
@@ -2320,11 +2326,9 @@ DWORD WINAPI GUIWnd::GetFileListByCodeProc(LPVOID lParam)
 	pWnd->ShowFiles();
 
 _exit:
-	pWnd->_imgProcess->Pause();
-
-	pWnd->UpdateStatus(TEXT("结束获取指定CODE文件列表线程……"));
+	pWnd->UpdateStatus("EndCodeThread", TEXT("结束获取指定CODE文件列表线程……"));
 	pWnd->SetTimer(UPDATE_TIMER_ID, 3000);
-
+	pWnd->_status.Pause();
 	PostMessage(pWnd->getSelf(), NM_ENDTHREAD, 0, reinterpret_cast<LPARAM>(&(pWnd->_hTreadGetFileList)));
 
 	return 1;
@@ -2408,11 +2412,17 @@ void GUIWnd::VariantDataToFiles(const char *data)
 	
 	if (IsErrorInfo(pXmlDoc, errInfo))
 	{
-		UpdateStatus(TEXT("获取列表失败，请检查输入的CODE是否正确。。。"));
+		UpdateStatus(NULL, TEXT("获取列表失败，请检查输入的CODE是否正确。。。"));
 
-		TString str(TEXT("获取文件列表时发生错误，服务器返回信息：\r\n"));
-		str += errInfo + TEXT("\r\n请检查CODE是否正确！");
-		msgBox(str, TEXT("获取列表失败"), MB_ICONERROR);
+		LangHelper lang;
+		TString text = TEXT("获取文件列表时发生错误，请检查CODE是否正确。服务器返回信息：");
+		TString title = TEXT("获取列表失败");
+		if (PrepareLang(lang)){
+			lang.GetMsgBox("ServerErr_Code", text, title);
+		}
+		text += TEXT("\r\n") + errInfo;
+
+		Window::msgBox(text, title, MB_ICONERROR);
 
 		goto end;
 	}
@@ -2439,7 +2449,7 @@ void GUIWnd::VariantDataToFiles(const char *data)
 
 	TiXmlNode *file = nodeFiles->FirstChild("file");
 
-	UpdateStatus(TEXT("正在分析返回数据……"));
+	UpdateStatus("Parsing", TEXT("正在分析返回数据……"));
 
 	for (; file; file = file->NextSibling())
 	{
@@ -2507,8 +2517,9 @@ void GUIWnd::ShowFiles()
 {
 	TString tmpStr;
 	tmpStr.format(TEXT("(%d)"), _vFiles.size());
-	::SendMessage(HwndFromId(IDS_FILE_LIST), WM_SETTEXT, 0, reinterpret_cast<LPARAM>(tmpStr.c_str()));
-	InvalidStatic(IDS_FILE_LIST);
+	_labelFilesCount.setText(tmpStr);
+
+	InvalidStatic(_labelFilesCount);
 
 	_lvFile.DeleteAllItems();
 
@@ -2596,7 +2607,7 @@ bool GUIWnd::SaveExportText(LPCTSTR lpDefFileName, const TString &strData)
 {
 	TString filePath = SelectFilePath(lpDefFileName);
 	if (filePath.empty())
-		return false;
+		return true;
 
 #ifdef UNICODE
 	int len = wtoa(strData, NULL);
@@ -2613,9 +2624,20 @@ bool GUIWnd::SaveExportText(LPCTSTR lpDefFileName, const TString &strData)
 	return fOk;
 }
 //////////////////////////////////////////////////////////////////////////
-void GUIWnd::UpdateStatus(const TString &infoText, int nPart /* = 1 */)
+void GUIWnd::UpdateStatus(LPCSTR type, const TString &infoText, int nPart /* = 1 */)
 {
-	_status.setText(nPart, infoText);
+	TString info = infoText;
+
+	if (type != NULL)
+	{
+		LangHelper lang;
+
+		if (PrepareLang(lang)){
+			lang.GetStatus(type, info);
+		}
+	}
+
+	_status.setText(nPart, info);
 }
 //////////////////////////////////////////////////////////////////////////
 void GUIWnd::ShowServer(int index /* = 1 */)
@@ -2626,7 +2648,7 @@ void GUIWnd::ShowServer(int index /* = 1 */)
 		TEXT("\tProduction External"),
 		TEXT("\tQuality Assurance")
 	};
-	UpdateStatus(szServer[index], 3);
+	UpdateStatus(NULL, szServer[index], 3);
 }
 //////////////////////////////////////////////////////////////////////////
 //文件列表排序
@@ -2737,7 +2759,7 @@ bool GUIWnd::SaveFileToZip(const TString& zipFile, const TString& name, LPVOID l
 	map<TString, TString> mTmpFiles;
 	TCHAR tmp[MAX_PATH] = {0};
 
-	if (::PathFileExists(zipFile))
+	if (File::Exists(zipFile))
 	{
 		hZip = OpenZip(zipFile, NULL);
 
@@ -2830,7 +2852,7 @@ char* GUIWnd::GetSoap(Http& http, LPCTSTR lpPost, LPDWORD pdwSize)
 {
 	if (!http.Init(true, AGENT_NAME))
 	{
-		UpdateStatus(TEXT("LibCurl初始化出错了！"));
+		UpdateStatus(NULL, TEXT("LibCurl初始化出错了！"));
 		return 0;
 	}
 
@@ -2843,7 +2865,7 @@ char* GUIWnd::GetSoap(Http& http, LPCTSTR lpPost, LPDWORD pdwSize)
 
 	ASSERT_SERVER_INDEX(index);
 
-	UpdateStatus(TEXT("正在连接服务器获取数据……"));
+	UpdateStatus("Connecting", TEXT("正在连接服务器获取数据……"));
 
 	http.ShowProgress(WebProgress, this);
 #ifdef UNICODE
@@ -2862,13 +2884,13 @@ TString GUIWnd::TryGetSessionID()
 
 	if (session.empty())
 	{
-		UpdateStatus(TEXT("尝试获取SessionID..."));
+		UpdateStatus("GetSID", TEXT("尝试获取SessionID..."));
 		session = GetSessionID();
 	}
 
 	if (session.empty())
 	{
-		msgBox(TEXT("无法获取有效身份验证ID，请稍后再尝试！\r\n"),
+		msgBox("SID", TEXT("无法获取有效身份验证ID，请稍后再尝试！\r\n"),
 			TEXT("出错"), MB_ICONERROR);
 	}
 
@@ -2891,7 +2913,7 @@ void GUIWnd::WebProgress(double total, double now, void* pGuiWnd)
 	GUIWnd* pWnd = (GUIWnd*)pGuiWnd;
 
 	TString str = MakeFileSizeFmt((DWORD)now);
-	pWnd->UpdateStatus(str, 2);
+	pWnd->UpdateStatus(NULL, str, 2);
 }
 //////////////////////////////////////////////////////////////////////////
 void GUIWnd::ValidTaskMgr()
@@ -2903,6 +2925,10 @@ void GUIWnd::ValidTaskMgr()
 		{
 			_taskMgr = new TaskMgrWnd;
 			_taskMgr->init(getHinst(), getSelf());
+
+				LangHelper lang;
+				if (PrepareLang(lang))
+					lang.SetTaskMgr(_taskMgr);
 		}
 		catch(std::exception &e)
 		{
@@ -2917,6 +2943,15 @@ void GUIWnd::ValidTaskMgr()
 		_newTaskDlg->init(getHinst(), getSelf());
 
 		_newTaskDlg->create(IDD_NEW_TASK, _taskMgr);
+
+		LangHelper lang;
+		if (PrepareLang(lang))
+		{
+			lang.SetDialog(_newTaskDlg->getSelf(), "NewTask");
+			lang.SetNewTaskLv(_newTaskDlg->getSelf());
+		}
+
+		_newTaskDlg->ResizeLabels();
 	}
 }
 
@@ -2958,21 +2993,21 @@ void GUIWnd::ShowIndeterminateProgress(bool fShow /* = true */)
 	}
 }
 
-void GUIWnd::InvalidStatic(UINT id)
+void GUIWnd::InvalidStatic(Static &staic)
 {
 	Rect rect;
-	::GetWindowRect(HwndFromId(id), &rect);
+	staic.GetWindowRect(&rect);
 	ScreenToClient(&rect);
 	InvalidateRect(&rect, TRUE);
 }
-
+/*
 void GUIWnd::ExcludeChildRect(HDC hdc)
 {
 	Rect rc;
 
 	vector<Rect> vRect;
 
-	::GetWindowRect(HwndFromId(IDE_PRODUCT_FILTER), &rc);
+	_edProduct.GetWindowRect(&rc);
 	vRect.push_back(rc);
 
 	_lbProduct.GetWindowRect(&rc);
@@ -2981,7 +3016,7 @@ void GUIWnd::ExcludeChildRect(HDC hdc)
 	_lbRelease.GetWindowRect(&rc);
 	vRect.push_back(rc);
 
-	::GetWindowRect(HwndFromId(IDE_VARIANT_FILTER), &rc);
+	_edVariant.GetWindowRect(&rc);
 	vRect.push_back(rc);
 
 	_lbVariant.GetWindowRect(&rc);
@@ -2999,7 +3034,7 @@ void GUIWnd::ExcludeChildRect(HDC hdc)
 		ExcludeClipRect(hdc, vRect[i].left, vRect[i].top, vRect[i].right, vRect[i].bottom);
 	}
 }
-
+*/
 void GUIWnd::InitBackground()
 {
 	if (_pConfig == NULL)
@@ -3013,4 +3048,559 @@ void GUIWnd::InitBackground()
 	_hbmpBkgnd = GradienBitmap(_hWnd, cr1, cr2);
 
 	InvalidateRect(NULL, TRUE);
+}
+
+void GUIWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	InitCommonControls();
+
+	OSVERSIONINFO ovi = {0};
+	ovi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	if (GetVersionEx(&ovi))
+	{
+		//Win7 => v6.1
+		if (ovi.dwMajorVersion >= 6 &&
+			ovi.dwMinorVersion >= 1
+			)
+		{
+			WM_TASKBARBUTTONCREATED = RegisterWindowMessage(TEXT("TaskbarButtonCreated"));
+			_fDisableTaskbar = FALSE;
+		}
+	}
+
+	CreateControls();
+
+	_hFontChild = CreateFont(12);
+
+	_labelProducts.setFont(_hFontChild);
+	_labelProductsCount.setFont(_hFontChild);
+	_labelReleases.setFont(_hFontChild);
+	_labelReleasesCount.setFont(_hFontChild);
+	_labelVariants.setFont(_hFontChild);
+	_labelVariantsCount.setFont(_hFontChild);
+	_labelFiles.setFont(_hFontChild);
+	_labelFilesCount.setFont(_hFontChild);
+
+	_edProduct.setFont(_hFontChild);
+	_edVariant.setFont(_hFontChild);
+
+	_lbProduct.setFont(_hFontChild);
+	_lbRelease.setFont(_hFontChild);
+	_lbVariant.setFont(_hFontChild);
+	_lvFile.setFont(_hFontChild);
+
+	_btnDownload.setFont(_hFontChild);
+
+	_picFrame.init(_hinst, _hWnd);
+	_picFrame.setStyle(SS_BLACKFRAME);
+	_picFrame.create(NULL);
+
+	LVCOLUMN lvColumn = {0};
+
+	lvColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+	lvColumn.fmt = LVCFMT_LEFT;
+
+	lvColumn.pszText = TEXT("文件名");
+	lvColumn.cx = 150;
+	_lvFile.InsertColumn(0, &lvColumn);
+
+	lvColumn.pszText = TEXT("大小");
+	lvColumn.cx = 70;
+	_lvFile.InsertColumn(1, &lvColumn);
+
+	int nParts[4] = {32, _status.getWidth()*5/7, _status.getWidth()*5/7 + 75, -1};
+	_status.SetParts(4, nParts);
+
+ 	Rect rect;
+ 	_status.GetRect(0, &rect);
+ 
+ 	int x = rect.left + (rect.Width() - 16)/2;
+ 	int y = rect.top + (rect.Height() - 16)/2;
+
+	_labelProductsCount.resizeTo(140, 15);
+	_labelReleasesCount.resizeTo(80, 15);
+	_labelVariantsCount.resizeTo(140, 15);
+	_labelFilesCount.resizeTo(140, 15);
+
+	ResizeLabels();
+}
+//////////////////////////////////////////////////////////////////////////
+void GUIWnd::OnSize(int nWidth, int nHeight)
+{
+	int width = nWidth*27/100;
+
+	int xSpace = (nWidth - width*3 - width/2 - 20)/3;
+	//避免空隙过大
+	if (xSpace > 9)
+	{
+		width += xSpace - 9;
+		xSpace = 9;
+	}
+
+	_edProduct.resizeTo(width, 20);
+	_edVariant.resizeTo(width, 20);
+	_lbProduct.resizeTo(width, nHeight - 85);
+	_lbRelease.resizeTo(width/2, nHeight - 60 - width/2);
+	_lbVariant.resizeTo(width, nHeight - 85);
+	_lvFile.resizeTo(width, nHeight - 120);
+	_btnDownload.resizeTo(width, 50);
+	_status.resizeTo(nWidth, nHeight);
+	_picFrame.resizeTo(width/2, width/2);
+
+	int x = 10;
+	_labelProducts.moveTo(x, 10);
+	_labelProductsCount.moveTo(x + _labelProducts.getWidth(), 10);
+
+	_edProduct.moveTo(x, 30);
+	_lbProduct.moveTo(x, 55);
+
+	x += width + xSpace;
+	_labelReleases.moveTo(x, 10);
+	_labelReleasesCount.moveTo(x + _labelReleases.getWidth(), 10);
+
+	_lbRelease.moveTo(x, 30);
+	int y = 30 + _lbRelease.getHeight() + 5;
+	_picFrame.moveTo(x, y);
+
+	x += width/2 + xSpace;
+	_labelVariants.moveTo(x, 10);
+	_labelVariantsCount.moveTo(x + _labelVariants.getWidth(), 10);
+
+	_edVariant.moveTo(x, 30);
+	_lbVariant.moveTo(x, 55);
+
+	x += width + xSpace;
+	_labelFiles.moveTo(x, 10);
+	_labelFilesCount.moveTo(x + _labelFiles.getWidth(), 10);
+
+	_lvFile.moveTo(x, 30);
+
+	y = 30 + _lvFile.getHeight() + 8;
+
+	_btnDownload.moveTo(x, y);
+
+	int nParts[4] = {32, _status.getWidth()*5/7, _status.getWidth()*5/7 + 75, -1};
+	_status.SetParts(4, nParts);
+
+	InitBackground();
+}
+
+void GUIWnd::LoadSession()
+{
+	 _hThreadProduct = CreateThread(0, 0, GetProductListProc, this, 0, 0);
+
+ 	if (_hThreadProduct == INVALID_HANDLE_VALUE){
+ 		msgBox("ThreadErr", TEXT("GUIWnd::OnInit: 创建线程出错了"), TEXT("Error"), MB_ICONERROR);
+ 	}else{
+		_status.Play();
+	}
+	TString nve = MakeFilePath(TEXT("task.nve"));
+
+	if (File::Exists(nve))
+	{
+		_nvFile = new NveFile;
+
+		if (_nvFile->load(nve))
+		{
+			BOOL fYes = TRUE;
+			if (_pConfig)
+			{
+				if (_pConfig->downloadWithPompt())
+				{
+					DlgConfirm confirm;
+
+					confirm.init(getHinst(), getSelf());
+
+					confirm.setTitle(TEXT("继续下载"));
+					confirm.setText(TEXT("是否继续下载上次未完成的任务？"));
+
+					SetConfirmLang(confirm, "Task");
+
+					confirm.doModal(IDD_CONFIRM);
+					bool fPrompt;
+					fYes = confirm.getResult(fPrompt);
+					_pConfig->setDownPrompt(fPrompt);
+					_pConfig->setDownAction(fYes);
+				}
+			}
+
+			if (fYes)
+			{
+				ValidTaskMgr();
+
+				if (_pConfig)
+				{
+					if (_pConfig->showTaskMgr())
+						_taskMgr->showWindow();
+				}
+				else
+				{
+					_taskMgr->showWindow();
+				}
+
+				list<TiFile> vlist = _nvFile->getlist();
+				list<TiFile>::iterator it = vlist.begin();
+
+				for ( ; it != vlist.end(); it++){
+					_taskMgr->newTask(*it);
+				}
+			}
+			else
+			{
+				HMENU hMenu = GetMenu();
+				hMenu = GetSubMenu(hMenu, 0);
+				InsertMenu(hMenu, 2, MF_BYPOSITION | MF_BYCOMMAND, IDM_DOWN_CONTINUE, TEXT("继续下载(&G)"));
+				InsertMenu(hMenu, 3, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
+
+				if (_curLangIndex != -1 && _vLang.size() > 0 && _curLangIndex < _vLang.size())
+				{
+					LangHelper lang;
+					if (lang.Load(_vLang[_curLangIndex]))
+					{
+						lang.SetMainMenu(GetMenu());
+					}
+				}
+			}
+		}
+
+		File::Delete(nve);
+	}
+}
+
+void GUIWnd::CreateControls()
+{
+	_labelProducts.init(_hinst, _hWnd);
+	_labelProducts.create(TEXT("产品型号："));
+	_labelProductsCount.init(_hinst, _hWnd);
+	_labelProductsCount.create(TEXT("(0/0)"));
+
+	_labelReleases.init(_hinst, _hWnd);
+	_labelReleases.create(TEXT("发布版本："));
+	_labelReleasesCount.init(_hinst, _hWnd);
+	_labelReleasesCount.create(TEXT("(0)"));
+
+	_labelVariants.init(_hinst, _hWnd);
+	_labelVariants.create(TEXT("CODE："));
+	_labelVariantsCount.init(_hinst, _hWnd);
+	_labelVariantsCount.create(TEXT("(0/0)"));
+
+	_labelFiles.init(_hinst, _hWnd);
+	_labelFiles.create(TEXT("文件列表："));
+	_labelFilesCount.init(_hinst, _hWnd);
+	_labelFilesCount.create(TEXT("(0)"));
+
+	_lbProduct.init(_hinst, _hWnd);
+	_lbProduct.setStyle(LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP);
+	_lbProduct.create(NULL);
+	_lbProduct.doSubclass();
+
+	_lbRelease.init(_hinst, _hWnd);
+	_lbRelease.setStyle(LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP);
+	_lbRelease.create(NULL);
+
+	_lbVariant.init(_hinst, _hWnd);
+	_lbVariant.setStyle(LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP);
+	_lbVariant.create(NULL);
+	_lbVariant.doSubclass();
+
+	_lvFile.init(_hinst, _hWnd);
+	_lvFile.setStyle(LVS_REPORT | LVS_SHOWSELALWAYS | LVS_AUTOARRANGE | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP);
+	_lvFile.create(NULL);
+
+	_lvFile.SetExtendedStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP );
+
+	_status.init(_hinst, _hWnd);
+	_status.create();
+
+	_edProduct.init(_hinst, _hWnd);
+	_edProduct.create(NULL);
+
+	_edVariant.init(_hinst, _hWnd);
+	_edVariant.create(NULL);
+
+	_btnDownload.init(_hinst, _hWnd);
+	_btnDownload.create(TEXT("添加到下载任务"));
+	_btnDownload.disable();
+}
+
+void GUIWnd::LoadLanguage()
+{
+	TString langDir = MakeFilePath(TEXT("lang"));
+
+	if (!File::Exists(langDir))
+		return ;
+
+	WIN32_FIND_DATA wfd = {0};
+
+	TString tmp = langDir + TEXT("\\*");
+
+	HANDLE hFind = FindFirstFile(tmp, &wfd);
+
+	if (hFind == INVALID_HANDLE_VALUE)
+		return ;
+
+	do
+	{
+		if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			continue ;
+
+		TString fullPath = langDir + TEXT("\\") + wfd.cFileName;
+
+		if (IsLangFile(fullPath))
+			_vLang.push_back(fullPath);
+
+	}while(FindNextFile(hFind, &wfd));
+
+	FindClose(hFind);
+
+	InitLangMenu();
+}
+
+bool GUIWnd::IsLangFile(const TString &file)
+{
+	TiXmlDocument *doc = new TiXmlDocument();
+
+	bool fYes = false;
+
+#ifdef UNICODE
+	if (!doc->LoadFile(wtoa(file)))
+#else
+	if (!doc->LoadFile(file))
+#endif
+		goto _end;
+
+	TiXmlNode *nodeLang = doc->FirstChild("Language");
+
+	if (!nodeLang)
+		goto _end;
+
+	if (nodeLang->FirstChild("Menu"))
+		fYes = true;
+	else if (nodeLang->FirstChild("UI"))
+		fYes = true;
+	else if (nodeLang->FirstChild("TaskMgr"))
+		fYes = true;
+	else if (nodeLang->FirstChild("Dialog"))
+		fYes = true;
+	else
+		fYes = false;
+
+_end:
+	if (doc){
+		delete doc;
+	}
+
+	return fYes;
+}
+
+void GUIWnd::InitLangMenu()
+{
+	if (_vLang.empty())
+		return ;
+
+	HMENU hMenu = GetMenu();
+	hMenu = GetSubMenu(hMenu, 1);
+	if (!hMenu)
+		return ;
+
+	hMenu = GetSubMenu(hMenu, 4);
+	if (!hMenu)
+		return ;
+
+	int cmd = IDM_LANG_DEFAULT + 1;
+	int curLangId = -1;
+
+	TString curLang;
+
+	if (_pConfig)
+	{
+		curLang = _pConfig->getLangFile();
+		curLang.toLower();
+	}
+
+	for (size_t i=0; i<_vLang.size(); i++)
+	{
+		LangHelper lang;
+#ifdef UNICODE
+		if (!lang.Load(wtoa(_vLang[i].c_str()).c_str()))
+#else
+		if (!lang.Load(_vLang[i].c_str()))
+#endif
+			continue;
+
+		TString name = lang.GetLangName();
+		if (!name.empty()){
+			AppendMenu(hMenu, MF_STRING, cmd++, name);
+		}
+
+		if (curLangId == -1 && !curLang.empty())
+		{
+			TString n = File::GetFileName(_vLang[i]);
+			n.toLower();
+
+			if (n == curLang)
+				curLangId = cmd - 1;
+		}
+	}
+
+	if (cmd != IDM_LANG_DEFAULT + 1)
+		RemoveMenu(hMenu, IDM_LANG_DEFAULT, MF_BYCOMMAND);
+
+	if (curLang.empty() && curLangId == -1){
+		CheckMenuRadioItem(hMenu, IDM_LANG_DEFAULT, cmd - 1, IDM_LANG_DEFAULT, MF_CHECKED);
+	}else{
+		CheckMenuRadioItem(hMenu, IDM_LANG_DEFAULT, cmd - 1, curLangId, MF_CHECKED);
+		SetLanguage(curLangId - IDM_LANG_DEFAULT - 1);
+	}
+}
+
+bool GUIWnd::SetLanguage(size_t i)
+{
+	if (i >= _vLang.size())
+		return false;
+
+	LangHelper lang;
+#ifdef UNICODE
+	if (!lang.Load(wtoa(_vLang[i].c_str()).c_str()))
+#else
+	if (!lang.Load(_vLang[i].c_str()))
+#endif
+		return false;
+
+	lang.SetMainMenu(GetMenu());
+
+	DrawMenuBar(_hWnd);
+
+	lang.SetUIControls(this);
+
+	ResizeLabels();
+
+	InvalidStatic(_labelProducts);
+	InvalidStatic(_labelReleases);
+	InvalidStatic(_labelVariants);
+	InvalidStatic(_labelFiles);
+
+	if (_taskMgr){
+		lang.SetTaskMgr(_taskMgr);
+	}
+	if (_newTaskDlg)
+	{
+		lang.SetDialog(_newTaskDlg->getSelf(), "NewTask");
+		lang.SetNewTaskLv(_newTaskDlg->getSelf());
+		_newTaskDlg->ResizeLabels();
+	}
+
+	if (_pConfig)
+	{
+		TString name = File::GetFileName(_vLang[i]);
+		if (!name.empty())
+		{
+#ifdef UNICODE
+			_pConfig->setLangFile(wtoa(name));
+#else
+			_pConfig->setLangFile(name);
+#endif
+		}
+	}
+
+	_curLangIndex = i;
+
+	return true;
+}
+
+void GUIWnd::SetConfirmLang(DlgConfirm &dlg, const char *type)
+{
+	if (_curLangIndex != -1 && _vLang.size() > 0 && _curLangIndex < _vLang.size())
+	{
+		LangHelper lang;
+		if (lang.Load(_vLang[_curLangIndex]))
+		{
+			TString title, info;
+			if (lang.GetConfirmInfo(type, title, info))
+			{
+				if (!title.empty())
+					dlg.setTitle(title);
+				if (!info.empty())
+					dlg.setText(info);
+			}
+		}
+	}
+}
+
+void GUIWnd::ResizeLabels()
+{
+	TString text = _labelProducts.getText();
+
+	SIZE size;
+	Rect rect;
+
+	HDC hdc = GetDC(_hWnd);
+	HGDIOBJ hOldObj = SelectObject(hdc, _hFontChild);
+
+	GetTextExtentPoint(hdc, text, text.length(), &size);
+
+	_labelProducts.resizeTo(size.cx, 15);
+
+	_labelProducts.GetWindowRect(&rect);
+	ScreenToClient(&rect);
+
+	_labelProductsCount.moveTo(rect.right, 10);
+	//======================================================
+	text = _labelReleases.getText();
+	GetTextExtentPoint(hdc, text, text.length(), &size);
+
+	_labelReleases.resizeTo(size.cx, 15);
+
+	_labelReleases.GetWindowRect(&rect);
+	ScreenToClient(&rect);
+
+	_labelReleasesCount.moveTo(rect.right, 10);
+	//======================================================
+	text = _labelVariants.getText();
+	GetTextExtentPoint(hdc, text, text.length(), &size);
+
+	_labelVariants.resizeTo(size.cx, 15);
+
+	_labelVariants.GetWindowRect(&rect);
+	ScreenToClient(&rect);
+
+	_labelVariantsCount.moveTo(rect.right, 10);
+	//======================================================
+	text = _labelFiles.getText();
+	GetTextExtentPoint(hdc, text, text.length(), &size);
+
+	_labelFiles.resizeTo(size.cx, 15);
+
+	_labelFiles.GetWindowRect(&rect);
+	ScreenToClient(&rect);
+
+	_labelFilesCount.moveTo(rect.right, 10);
+	//======================================================
+	SelectObject(hdc, hOldObj);
+	ReleaseDC(_hWnd, hdc);
+}
+
+bool GUIWnd::PrepareLang(LangHelper &lang)
+{
+	if (_curLangIndex != -1 && _vLang.size() > 0 && _curLangIndex < _vLang.size())
+		return lang.Load(_vLang[_curLangIndex]);
+
+	return false;
+}
+
+int GUIWnd::msgBox(LPCSTR type, const TString &text, const TString &caption /*= TEXT("MessageBox")*/, UINT uType/* = MB_OK*/)
+{
+	TString strCaption = caption;
+	TString strInfo = text;
+
+	if (type != NULL)
+	{
+		LangHelper lang;
+
+		if (PrepareLang(lang)){
+			lang.GetMsgBox(type, strInfo, strCaption);
+		}
+	}
+
+	return Window::msgBox(strInfo, strCaption, uType);
 }

@@ -45,7 +45,6 @@ public:
 
 public:
 	inline HWND getSelf()	const	{	return _hWnd;	}
-	inline HWND GetParent()const	{	return _parentWnd;	}
 	inline HWND getParent()const	{	return _parentWnd;	}
 	inline void setParent(HWND hwndParent)	{	_parentWnd = hwndParent;	}
 	inline HINSTANCE getHinst()const	{	return _hinst;	}
@@ -69,6 +68,8 @@ public:
 		::GetWindowText(_hWnd, text, len+1);
 
 		title = text;
+
+		delete [] text;
 	}
 
 	TString getTitle()	{	TString t;	getTitle(t);	return t;	}
@@ -105,7 +106,7 @@ public:
 
 	void setAlphaValue(BYTE value)	{	::SetLayeredWindowAttributes(_hWnd, 0, (100-value)*255/100, LWA_ALPHA);	}
 
-	int msgBox(TString text, TString caption = TEXT("Message Box"), UINT uType = MB_OK)
+	virtual int msgBox(const TString &text, const TString &caption = TEXT("Message Box"), UINT uType = MB_OK)
 	{	return ::MessageBox(_hWnd ? _hWnd : ::GetActiveWindow(), text.c_str(), caption.c_str(), uType);	}
 
 	LRESULT sendMsg(UINT uMsg, WPARAM wParam = 0U, LPARAM lParam = 0L)	{	return ::SendMessage(_hWnd, uMsg, wParam, lParam);	}

@@ -200,6 +200,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;TIXML_USE_STL;_CRT_SECURE_NO_WARNINGS;CURL_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Async</ExceptionHandling>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -373,16 +374,17 @@
     <ClCompile Include="..\src\Config.cpp" />
     <ClCompile Include="..\src\DlgAbout.cpp" />
     <ClCompile Include="..\src\DlgConfig.cpp" />
-    <ClCompile Include="..\src\DlgNew.cpp" />
+    <ClCompile Include="..\src\DlgCode.cpp" />
     <ClCompile Include="..\src\DlgConfirm.cpp" />
     <ClCompile Include="..\src\DlgNewTask.cpp" />
     <ClCompile Include="..\src\GUIWnd.cpp" />
     <ClCompile Include="..\src\Http.cpp" />
-    <ClCompile Include="..\src\ImageEx.cpp" />
+    <ClCompile Include="..\src\LangHelper.cpp" />
     <ClCompile Include="..\src\MiniDownloader.cpp" />
     <ClCompile Include="..\src\ProductList.cpp" />
     <ClCompile Include="..\src\ProgressBarEx.cpp" />
     <ClCompile Include="..\src\ProgressView.cpp" />
+    <ClCompile Include="..\src\StatusEx.cpp" />
     <ClCompile Include="..\src\TaskMgrWnd.cpp" />
     <ClCompile Include="..\src\Tim\Dialog.cpp" />
     <ClCompile Include="..\src\Tim\File.cpp" />
@@ -406,18 +408,19 @@
     <ClInclude Include="..\src\data_type.h" />
     <ClInclude Include="..\src\DlgAbout.h" />
     <ClInclude Include="..\src\DlgConfig.h" />
-    <ClInclude Include="..\src\DlgNew.h" />
+    <ClInclude Include="..\src\DlgCode.h" />
     <ClInclude Include="..\src\DlgConfirm.h" />
     <ClInclude Include="..\src\DlgNewTask.h" />
     <ClInclude Include="..\src\GUIWnd.h" />
     <ClInclude Include="..\src\Http.h" />
-    <ClInclude Include="..\src\ImageEx.h" />
+    <ClInclude Include="..\src\LangHelper.h" />
     <ClInclude Include="..\src\MiniDownloader.h" />
     <ClInclude Include="..\src\nm_message.h" />
     <ClInclude Include="..\src\ProductList.h" />
     <ClInclude Include="..\src\ProgressBarEx.h" />
     <ClInclude Include="..\src\ProgressView.h" />
     <ClInclude Include="..\src\res\resource.h" />
+    <ClInclude Include="..\src\StatusEx.h" />
     <ClInclude Include="..\src\TaskMgrWnd.h" />
     <ClInclude Include="..\src\Tim\ClassEx.h" />
     <ClInclude Include="..\src\Tim\CommonCtrls.h" />
@@ -450,6 +453,7 @@
     <None Include="..\src\res\media-playback-pause-2.bmp" />
     <None Include="..\src\res\media-playback-pause-2.ico" />
     <None Include="..\src\res\media-playback-start-2.bmp" />
+    <None Include="..\src\res\process-working.bmp" />
     <None Include="..\src\res\process.gif" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

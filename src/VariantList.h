@@ -30,10 +30,7 @@ public:
 	VariantList();
 	~VariantList();
 
-	virtual void assign(UINT uId, HWND hwndParent = NULL)
-	{
-		ListBox::assign(uId, hwndParent);
-
+	void doSubclass(){
 		_lpfnOldProc = Subclass(ListProc);
 	}
 

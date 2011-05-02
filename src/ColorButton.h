@@ -31,6 +31,11 @@ public:
 		_crFrame(0), _fShowFrame(true)
 	{}
 
+	~ColorButton()
+	{
+		Subclass(_lpfnOldProc);
+	}
+
 	virtual void assign(UINT uId, HWND hwndParent /* = NULL */)
 	{
 		ControlBase::assign(uId, hwndParent);
