@@ -2,12 +2,11 @@
 =Screenshots of NaviFirmEx=
 
 ==NavFirmEx v1.5.2 on Chinese System(Windows 7)==
-http://code.google.com/p/navifirmex/source/browse/trunk/Screenshots/1.png
 
-http://code.google.com/p/navifirmex/source/browse/trunk/Screenshots/2.png
-
-http://code.google.com/p/navifirmex/source/browse/trunk/Screenshots/3.png
+http://navifirmex.googlecode.com/svn/trunk/Screenshots/1.png
+http://navifirmex.googlecode.com/svn/trunk/Screenshots/2.png
+http://navifirmex.googlecode.com/svn/trunk/Screenshots/3.png
 
 ==NavFirmEx v1.5.2 on English System(Windows XP)==
 
-http://code.google.com/p/navifirmex/source/browse/trunk/Screenshots/4.png
+http://navifirmex.googlecode.com/svn/trunk/Screenshots/4.png
