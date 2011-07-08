@@ -1,0 +1,8 @@
+#labels Featured
+#About NaviFirmEx
+
+= Introduction =
+
+NaviFirmEx is a Nokia Firmware Downloader. It will come in handy for users that want to flash their phones, or need the firmwares for modding purposes.
+
+= Details =
