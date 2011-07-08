@@ -18,11 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "common.h"
 
+#include <GdiPlus.h>
+
+
 using namespace Tim;
 
 HBITMAP GradienBitmap(HWND hWnd, COLORREF cr1, COLORREF cr2)
 {
-	Rect rcClient;
+/*	Rect rcClient;
 	::GetClientRect(hWnd, &rcClient);
 
 	HDC hdc = GetDC(hWnd);
@@ -88,6 +91,42 @@ HBITMAP GradienBitmap(HWND hWnd, COLORREF cr1, COLORREF cr2)
 	SelectObject(hdcMem, hOldObj);
 	DeleteDC(hdcMem);
 	ReleaseDC(hWnd, hdc);
+
+	return hbmp;*/
+
+	int r1 = GetRValue(cr1);
+	int g1 = GetGValue(cr1);
+	int b1 = GetBValue(cr1);
+
+	int r2 = GetRValue(cr2);
+	int g2 = GetGValue(cr2);
+	int b2 = GetBValue(cr2);
+
+	HDC hdc = GetDC(hWnd);
+	RECT rect;
+	::GetClientRect(hWnd, &rect);
+
+	int iHeight = rect.bottom - rect.top;
+	int iWidth = rect.right - rect.left;
+
+	using namespace Gdiplus;
+
+	Bitmap *pBitmap = new Bitmap(iWidth, iHeight);
+	Graphics *pGraphics = new Graphics(pBitmap);
+
+	LinearGradientBrush linGrBrush(Gdiplus::Rect(0, 0, iWidth, iHeight),
+		Color(r1, g1, b1),
+		Color(r2, g2, b2),
+		(REAL)(90 - 78));
+
+	pGraphics->FillRectangle(&linGrBrush, Gdiplus::Rect(0, 0, iWidth, iHeight));
+
+	HBITMAP hbmp = NULL;
+
+	pBitmap->GetHBITMAP(NULL, &hbmp);
+
+	delete pBitmap;
+	delete pGraphics;
 
 	return hbmp;
 }

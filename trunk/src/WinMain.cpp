@@ -34,15 +34,19 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow)
 	curl_global_init(CURL_GLOBAL_ALL);
 
 	GUIWnd guiWnd;
+	LANGID id = GetSystemDefaultUILanguage();
+	if (id == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) ||
+		id == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)
+		)
+		guiWnd.isCNSystem = true;
+	else
+		guiWnd.isCNSystem = false;
 
 	CreateMutex(NULL, FALSE, TEXT("NaviFirmEx_Mutex"));
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		LANGID id = GetSystemDefaultUILanguage();
 		int ans = IDYES;
-		if (id == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) ||
-			id == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)
-			)
+		if (guiWnd.isCNSystem)
 		{
 			ans = MessageBox(GetActiveWindow(), \
 				TEXT("您已经运行了一个实例了，您是要将程序置前还是再运行一个实例？\r\n")

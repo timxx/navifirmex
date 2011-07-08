@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "Tim\dialog.h"
 #include "ColorButton.h"
 #include "Config.h"
+#include "FontCtrl.h"
 
 class DlgConfig : public Tim::Dialog
 {
@@ -49,6 +50,10 @@ private:
 
 	COLORREF _crOldLeft;	//
 	COLORREF _crOldRight;
+
+	FontCtrl	_lkFont;
+	LOGFONT		_lFont;
+	COLORREF	_crFont;	 // old font color
 };
 
 #endif

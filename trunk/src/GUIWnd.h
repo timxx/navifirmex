@@ -89,29 +89,29 @@ protected:
 	void doVariantChange();
 	void doProductFilter();
 	void doVariantFilter();
-	void doCopyUrl(UINT cmd);	//å¤åˆ¶æŒ‡å®šæ–‡ä»¶URLåˆ°å‰ªåˆ‡æ¿
+	void doCopyUrl(UINT cmd);	//¸´ÖÆÖ¸¶¨ÎÄ¼şURLµ½¼ôÇĞ°å
 	void doDownLoad();
 	void doSelAll(bool fYes = true);
-	void doRefresh(bool fNeedACK = true);			//åˆ·æ–°
+	void doRefresh(bool fNeedACK = true);			//Ë¢ĞÂ
 
-	//è·å–äº§å“åˆ—è¡¨
+	//»ñÈ¡²úÆ·ÁĞ±í
 	static DWORD WINAPI GetProductListProc(LPVOID lParam);
-	//åˆ†æè¿”å›æ•°æ®
+	//·ÖÎö·µ»ØÊı¾İ
 	int ReadProduct(const char *data, DWORD dwSize);
-	//è¯»å–ä¸€ä¸ªäº§å“
+	//¶ÁÈ¡Ò»¸ö²úÆ·
 	void GetProductInfo(TiXmlNode *node);
 
-	//Releaseåˆ—è¡¨
+	//ReleaseÁĞ±í
 	static DWORD WINAPI GetReleaseListProc(LPVOID lParam);
 	int	ReadRelease(const char *data, DWORD dwSize, const TString &productID);
 	void GetReleaseInfo(TiXmlNode *node);
 
-	//variantåˆ—è¡¨
+	//variantÁĞ±í
 	static DWORD WINAPI GetVariantListProc(LPVOID lParam);
 	int	ReadVariant(const char *data, DWORD dwSize, const TString &releaseID);
 	void GetVariantInfo(TiXmlNode *node, TiXmlNode *bodyNode);
 
-	//ç»ˆæ­¢çº¿ç¨‹
+	//ÖÕÖ¹Ïß³Ì
 	void EndThread(HANDLE &hThread);
 
 	void ShowProducts();
@@ -126,9 +126,9 @@ protected:
 
 	HBITMAP ImageFileToHBitmap(const TString &file);
 
-	//ç¨‹åºæ ¹ç›®å½•
+	//³ÌĞò¸ùÄ¿Â¼
 	TString GetRootFolder();
-	//ç¨‹åºæ ¹ç›®å½•+subPath
+	//³ÌĞò¸ùÄ¿Â¼+subPath
 	TString MakeFilePath(const TString &subPath);
 
 	void RefreshProducts();
@@ -151,10 +151,10 @@ protected:
 
 		return NULL;
 	}
-	//æ ¹æ®æ–‡ä»¶çš„å­˜åœ¨ã€å¤§å°åˆ¤æ–­æ˜¯å¦éœ€æ›´æ–°
+	//¸ù¾İÎÄ¼şµÄ´æÔÚ¡¢´óĞ¡ÅĞ¶ÏÊÇ·ñĞè¸üĞÂ
 	static bool FileNeedUpdate(const TString &filePath, DWORD dwMinFileSize = 0);
 
-	//å–#ID_XXçš„URL
+	//È¡#ID_XXµÄURL
 	string GetFileUrlByID(TiXmlNode *bodyNode, const char *ID);
 
 	void ExportProductToText();
@@ -164,7 +164,7 @@ protected:
 
 	TString SelectFilePath(const TString &defName);
 
-	//å–å¾—æŒ‡å®šCODEçš„æ–‡ä»¶åˆ—è¡¨
+	//È¡µÃÖ¸¶¨CODEµÄÎÄ¼şÁĞ±í
 	static DWORD WINAPI GetFileListByCodeProc(LPVOID lParam);
 	TString GetSessionID();
 	void VariantDataToFiles(const char *data);
@@ -172,9 +172,9 @@ protected:
 	TString GetFileElement(TiXmlNode *fileNode, const char *tagName, TiXmlNode *bodyNode = NULL);
 	void ShowFiles();
 
-	//åˆ¤æ–­è¿”å›æ•°æ®æ˜¯å¦ä¸ºé”™è¯¯ä¿¡æ¯
+	//ÅĞ¶Ï·µ»ØÊı¾İÊÇ·ñÎª´íÎóĞÅÏ¢
 	bool IsErrorInfo(TiXmlDocument *pDoc, TString &strErrInfo);
-	//å–å¾—nodeç¬¬ä¸€ä¸ªchildElementçš„æ–‡æœ¬å€¼
+	//È¡µÃnodeµÚÒ»¸öchildElementµÄÎÄ±¾Öµ
 	TString GetChildElementText(TiXmlNode *node, const char *childElement);
 
 	bool SaveExportText(LPCTSTR lpDefFileName, const TString &strData);
@@ -183,28 +183,28 @@ protected:
 
 	void SortListItem(int index);
 
-	//è§£å‹ZIPä¸­nameæ–‡ä»¶å¹¶è¿”å›å†…å®¹æŒ‡é’ˆï¼Œ æ•°æ®å¤§å°å­˜äºdwSize
+	//½âÑ¹ZIPÖĞnameÎÄ¼ş²¢·µ»ØÄÚÈİÖ¸Õë£¬ Êı¾İ´óĞ¡´æÓÚdwSize
 	static char*	GetFileDataFromZip(const TString& zipFile, const TString& name, DWORD& dwSize);
-	//ä¿å­˜åˆ°ZIP
+	//±£´æµ½ZIP
 	static bool		SaveFileToZip(const TString& zipFile, const TString& name, LPVOID lpData, DWORD dwSize);
-	//åˆ¤æ–­ZIPé‡Œæ˜¯å¦æœ‰nameæ–‡ä»¶
+	//ÅĞ¶ÏZIPÀïÊÇ·ñÓĞnameÎÄ¼ş
 	static bool		FileExistsZip(const TString& zipFile, const TString& name); 
 	char* GetSoap(Http& http, LPCTSTR lpPost, LPDWORD pdwSize);
-	//å°è¯•è·å–SESSIONID
+	//³¢ÊÔ»ñÈ¡SESSIONID
 	TString TryGetSessionID();
-	//å–å¾—å­—ç¬¦ä¸²èµ„æº
+	//È¡µÃ×Ö·û´®×ÊÔ´
 	TString LoadSoapString(UINT uID);
 
-	//å½“å‰è”ç½‘è¿›åº¦
+	//µ±Ç°ÁªÍø½ø¶È
 	static void WebProgress(double total, double now, void* pGuiWnd);
 
-	//å¦‚æœä¸‹è½½ä»»åŠ¡çª—å£æ²¡åˆ›å»ºåˆ™åˆ›å»º
+	//Èç¹ûÏÂÔØÈÎÎñ´°¿ÚÃ»´´½¨Ôò´´½¨
 	void ValidTaskMgr();
 	void InitTaskBar();
-	//æ˜¯å¦æ˜¾ç¤ºæ»šåŠ¨è¿›åº¦
+	//ÊÇ·ñÏÔÊ¾¹ö¶¯½ø¶È
 	void ShowIndeterminateProgress(bool fShow = true);
 	void ShowToolTip(bool fShow = true);
-	//åˆ·æ–°Staticæ§ä»¶èƒŒæ™¯
+	//Ë¢ĞÂStatic¿Ø¼ş±³¾°
 	void InvalidStatic(Static &staic);
 
 //	void ExcludeChildRect(HDC hdc);
@@ -228,6 +228,8 @@ protected:
 	bool PrepareLang(LangHelper &lang);
 
 	int msgBox(LPCSTR type, const TString &text, const TString &caption = TEXT("MessageBox"), UINT uType = MB_OK);
+
+	void setChildrenFont(const HFONT &hFont);
 private:
 	TaskMgrWnd * _taskMgr;
 	DlgNewTask * _newTaskDlg;
@@ -277,12 +279,12 @@ private:
 
 	GetImageProcParam _getImgProcParam;
 
-	//é€šè¿‡CODEä¸‹è½½çš„CODE
+	//Í¨¹ıCODEÏÂÔØµÄCODE
 	TString		_code;
-	//æ˜¾ç¤ºçš„æ–‡ä»¶åˆ—è¡¨
+	//ÏÔÊ¾µÄÎÄ¼şÁĞ±í
 	vector<FileInfo> _vFiles;
 
-	//æœåŠ¡å™¨åˆ—è¡¨
+	//·şÎñÆ÷ÁĞ±í
 	static char *_szServer[3];
 
 	Config	*_pConfig;
@@ -291,18 +293,18 @@ private:
 	enum sort_type{SORT_UP, SORT_DOWN};
 	sort_type	_sortType;	//
 
-	//æ˜¯å¦æç¤ºè¦†ç›–æ–‡ä»¶
+	//ÊÇ·ñÌáÊ¾¸²¸ÇÎÄ¼ş
 	BOOL	_fPrompt;
-	//ç”¨æˆ·é€‰æ‹©è¦†ç›–è¿˜æ˜¯è·³è¿‡
+	//ÓÃ»§Ñ¡Ôñ¸²¸Ç»¹ÊÇÌø¹ı
 	BOOL	_fOverwrite;
 
 	NveFile *_nvFile;
 
-	//åœ¨ç³»ç»Ÿä»»åŠ¡æ æ˜¾ç¤ºè¿›åº¦
+	//ÔÚÏµÍ³ÈÎÎñÀ¸ÏÔÊ¾½ø¶È
 	ITaskbarList3 *_pTaskbar;
-	//å½“è¿è¡Œåœ¨éWIN7æ—¶ç¦ç”¨
+	//µ±ÔËĞĞÔÚ·ÇWIN7Ê±½ûÓÃ
 	BOOL _fDisableTaskbar;
-	//åªç”¨äºè®¾ç½®ä»»åŠ¡æ è¿›åº¦æ—¶åˆ¤æ–­
+	//Ö»ÓÃÓÚÉèÖÃÈÎÎñÀ¸½ø¶ÈÊ±ÅĞ¶Ï
 	bool _fDownloading;
 	//
 	UINT WM_TASKBARBUTTONCREATED;
@@ -312,7 +314,10 @@ private:
 	HFONT	_hFontChild;
 
 	vector<TString> _vLang;
-	int _curLangIndex;	//current language index of _vLang
+	int _curLangIndex;	// current language index of _vLang
+
+public:
+	bool isCNSystem;	// whether current system is Chinese
 };
 
 #endif

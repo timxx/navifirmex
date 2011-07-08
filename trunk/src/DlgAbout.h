@@ -36,7 +36,7 @@ protected:
 
 	void OnInit();
 private:
-	LinkCtrl _qqLink;
+	//LinkCtrl _qqLink;
 	LinkCtrl _emailLink;
 	LinkCtrl _projectLink;
 };

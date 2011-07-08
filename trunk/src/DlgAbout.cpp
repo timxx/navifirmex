@@ -104,7 +104,7 @@ void DlgAbout::OnInit()
 #endif
 	SetItemText(IDS_BUILT, buildTime);
 
-	buildTime = TEXT("NaviFirmEx v1.5 ");
+	buildTime = TEXT("NaviFirmEx v1.5.2 ");
 #ifdef UNICODE
 	buildTime += TEXT("(UNICODE)");
 #else
@@ -112,8 +112,8 @@ void DlgAbout::OnInit()
 #endif
 	SetItemText(IDS_APP_VER, buildTime);
 
-	_qqLink.init(_hinst, _hWnd);
-	_qqLink.create(HwndFromId(IDS_QQ), TEXT("tencent://message/?uin=551907703"));
+// 	_qqLink.init(_hinst, _hWnd);
+// 	_qqLink.create(HwndFromId(IDS_QQ), TEXT("tencent://message/?uin=551907703"));
 	_emailLink.init(_hinst, _hWnd);
 	_emailLink.create(HwndFromId(IDS_EMAIL), TEXT("mailto:Just_Fancy@live.com"));
 	_projectLink.init(_hinst, _hWnd);

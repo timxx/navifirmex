@@ -52,6 +52,7 @@ public:
 	static BOOL Exists(const std::string &file);
 
 	static std::wstring GetFileName(const std::wstring &file);
+	static std::string GetFileName(const std::string &file);
 
 	static bool MakeDir(const std::wstring &folder);
 	static bool MakeDir(const std::string &folder);

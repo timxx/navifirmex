@@ -15,7 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include <tchar.h>
+
 #include "Config.h"
+#include "Tim/TString.h"
+
+using namespace Tim;
 
 Config::Config(const char *filePath)
 {
@@ -43,6 +49,12 @@ Config::Config(const char *filePath)
 	_fExitPrompt = TRUE;
 	_fExitAction = TRUE;
 	_fShowTaskMgr = TRUE;
+
+	_crFont = RGB(0, 0, 0);
+	RtlSecureZeroMemory(&_lFont, sizeof(LOGFONT));
+
+	_tcscpy_s(_lFont.lfFaceName, 32, TEXT("ËÎÌו"));
+	_lFont.lfHeight = 12;
 }
 
 bool Config::load()
@@ -121,6 +133,11 @@ void Config::makeDefault()
 			"<Window>"
 				"<MainGUI left=\"0\" top=\"0\" right=\"600\" bottom=\"480\" maxed=\"0\">"
 					"<Color begin = \"#BDB8ED\" end =\"#C0DACE\"/>"
+					"<Font>"
+						"<Data value = \"12|0|0|0|0|0|0|0|0|0|0|0|0\"/>"
+						"<Name value = \"ËÎÌו\"/>"
+						"<Color value = \"#000000\"/>"
+					"</Font>"
 				"</MainGUI>"
 				"<TaskMgr left=\"0\" top=\"0\" right=\"540\" bottom=\"250\" maxed=\"0\"/>"
 			"</Window>"
@@ -202,16 +219,18 @@ void Config::loadWindow(TiXmlNode *node)
 		itemElement->Attribute("bottom", (int*)&_rcGUI.bottom);
 		itemElement->Attribute("maxed", &_fGUIMaxed);
 
-		itemElement = itemElement->FirstChildElement("Color");
+		TiXmlElement *item = itemElement->FirstChildElement("Color");
 
-		if (itemElement)
+		if (item)
 		{
-			const char *begin = itemElement->Attribute("begin");
-			const char *end = itemElement->Attribute("end");
+			const char *begin = item->Attribute("begin");
+			const char *end = item->Attribute("end");
 
 			_cr1 = makeColor(begin);
 			_cr2 = makeColor(end);
 		}
+
+		loadFont(itemElement->FirstChild("Font"));
 
 		itemElement = node->FirstChildElement("TaskMgr");
 		if (itemElement)
@@ -223,7 +242,6 @@ void Config::loadWindow(TiXmlNode *node)
 			itemElement->Attribute("maxed", &_tgMaxed);
 		}
 	}
-
 }
 
 void Config::loadDownload(TiXmlNode *node)
@@ -294,6 +312,8 @@ void Config::writeWindow(TiXmlNode *node)
 			delete [] cr1;
 			delete [] cr2;
 		}
+
+		writeFont(itemElement);
 	}
 
 	itemElement = node->FirstChildElement("TaskMgr");
@@ -347,5 +367,82 @@ void Config::writeDownload(TiXmlNode *node)
 	itemElement = node->FirstChildElement("TaskMgr");
 	if (itemElement){
 		itemElement->SetAttribute("show", _fShowTaskMgr);
+	}
+}
+
+void Config::writeFont(TiXmlNode *node)
+{
+	TiXmlNode *font = node->FirstChild("Font");
+	if (font)
+	{
+		TiXmlElement *item = font->FirstChildElement("Data");
+		if (item)
+		{
+			char data[128] = {0};
+			wsprintfA(data, "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d", _lFont.lfHeight,
+				_lFont.lfWidth, _lFont.lfEscapement, _lFont.lfOrientation, _lFont.lfWeight,
+				_lFont.lfItalic, _lFont.lfUnderline, _lFont.lfStrikeOut, _lFont.lfCharSet,
+				_lFont.lfOutPrecision, _lFont.lfClipPrecision, _lFont.lfQuality, _lFont.lfPitchAndFamily
+				);
+
+			item->SetAttribute("value", data);
+		}
+
+		item = font->FirstChildElement("Name");
+		if (item)
+		{
+#ifdef UNICODE
+			item->SetAttribute("value", wtoa(_lFont.lfFaceName));
+#else
+			item->SetAttribute("value", _lFont.lfFaceName);
+#endif
+		}
+
+		item = font->FirstChildElement("Color");
+		if (item)
+		{
+			item->SetAttribute("value", makeColor(_crFont));
+		}
+	}
+}
+
+void Config::loadFont(TiXmlNode *node)
+{
+	if (!node)
+		return ;
+
+	TiXmlElement *item  = node->FirstChildElement("Data");
+	if (item)
+	{
+		const char *data = item->Attribute("value");
+		if (data)
+		{
+			sscanf_s(data, "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d",  &_lFont.lfHeight,
+				&_lFont.lfWidth, &_lFont.lfEscapement, &_lFont.lfOrientation, &_lFont.lfWeight,
+				&_lFont.lfItalic, &_lFont.lfUnderline, &_lFont.lfStrikeOut, &_lFont.lfCharSet,
+				&_lFont.lfOutPrecision, &_lFont.lfClipPrecision, &_lFont.lfQuality,
+				&_lFont.lfPitchAndFamily)
+				;
+		}
+	}
+
+	item = node->FirstChildElement("Name");
+	if (item)
+	{
+		const char *value = item->Attribute("value");
+		if (value)
+		{
+			TString str(value);
+			str.trim();
+			_tcscpy_s(_lFont.lfFaceName, 32, str);
+		}
+	}
+
+	item = node->FirstChildElement("Color");
+	if (item)
+	{
+		const char *value = item->Attribute("value");
+		if (value)
+			_crFont = makeColor(value);
 	}
 }
