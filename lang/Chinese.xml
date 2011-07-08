@@ -120,6 +120,7 @@
 			<item id = "1042" text = "右"/>
 			<item id = "1043" text = "确定"/>
 			<item id = "1044" text = "取消"/>
+			<item id = "1050" text = "字体设置"/>
 		</Config>
 		
 		<Confirm>

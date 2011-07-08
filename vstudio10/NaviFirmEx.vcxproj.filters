@@ -126,6 +126,9 @@
     <ClCompile Include="..\src\StatusEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\FontCtrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\Tim\ClassEx.h">
@@ -236,6 +239,9 @@
     <ClInclude Include="..\src\StatusEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\FontCtrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\res\NaviFirmEx.rc">
@@ -247,9 +253,6 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\src\res\process.gif">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\src\res\me.bmp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\src\res\blockdevice-2.ico">

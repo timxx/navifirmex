@@ -72,7 +72,11 @@ public:
 	BOOL extiAction()		const	{	return _fExitAction;		}
 	BOOL showTaskMgr()		const	{	return _fShowTaskMgr;		}
 
-	std::string getLangFile()	const	{	return _langFile;			}
+	std::string getLangFile()const	{	return _langFile;			}
+
+	void setFont(const LOGFONT &lf, COLORREF cr)	{	_lFont = lf;	_crFont = cr;	}
+	const LOGFONT& getFont() const					{	return _lFont;					}
+	COLORREF getFontColor() const					{	return _crFont;					}
 protected:
 	void makeDefault();
 
@@ -84,9 +88,12 @@ protected:
 	void loadWindow(TiXmlNode *node);
 	void loadDownload(TiXmlNode *node);
 
+	void loadFont(TiXmlNode *node);
+
 	void writeWindow(TiXmlNode *node);
 	void writeDownload(TiXmlNode *node);
 
+	void writeFont(TiXmlNode *node);
 private:
 	Rect	_rcGUI;
 	BOOL	_fGUIMaxed;
@@ -99,11 +106,15 @@ private:
 	//主窗口渐变颜色
 	COLORREF _cr1;
 	COLORREF _cr2;
+
 	BOOL	_fDownloadPrompt;	//运行时是否提示接着下载
 	BOOL	_fDownAction;		//TRUE - 点击确定
 	BOOL	_fExitPrompt;		//退出有任务时是否提醒
 	BOOL	_fExitAction;		//TRUE － 确定
 	BOOL	_fShowTaskMgr;
+
+	LOGFONT		_lFont;
+	COLORREF	_crFont;
 
 	std::string	_langFile;
 };

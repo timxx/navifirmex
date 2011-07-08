@@ -32,9 +32,11 @@ BOOL DlgConfig::runProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		OnCommand(LOWORD(wParam));
 		break;
 
-	case WM_CLOSE:
+	case WM_CLOSE:	// restore the previous values
  		_pConfig->setColor(_crOldLeft, _crOldRight);
+		_pConfig->setFont(_lFont, _crFont);
 		::PostMessage(getParent(), NM_CHANGEUI, 0, 0);
+		::PostMessage(getParent(), NM_CHANGEUI, 1, 0);
 
 		destroy();
 		break;
@@ -72,6 +74,12 @@ void DlgConfig::OnInit()
 
 	_cbLeft.setColor(_crOldLeft);
 	_cbRight.setColor(_crOldRight);
+
+	_crFont = _pConfig->getFontColor();
+	_lFont = _pConfig->getFont();
+
+	_lkFont.assign(HwndFromId(IDS_FONT), _hWnd);
+	_lkFont.setFont(_pConfig->getFont(), _pConfig->getFontColor());
 }
 
 void DlgConfig::OnCommand(int id)
@@ -102,6 +110,11 @@ void DlgConfig::OnCommand(int id)
 
 			::PostMessage(getParent(), NM_CHANGEUI, 0, 0);
 		}
+		break;
+
+	case IDS_FONT:
+		_pConfig->setFont(_lkFont.getFont(), _lkFont.getColor());
+		::PostMessage(getParent(), NM_CHANGEUI, 1, 0);
 		break;
 	}
 }

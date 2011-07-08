@@ -120,6 +120,7 @@
 			<item id = "1042" text = "R"/>
 			<item id = "1043" text = "OK"/>
 			<item id = "1044" text = "Cancel"/>	
+			<item id = "1050" text = "Font"/>
 		</Config>
 		
 		<Confirm>

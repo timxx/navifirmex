@@ -174,6 +174,11 @@ std::wstring File::GetFileName(const std::wstring &file)
 	return str.substr(pos + 1);
 }
 
+std::string File::GetFileName(const std::string &file)
+{
+	return wtoa(GetFileName(atow(file)));
+}
+
 bool File::MakeDir(const std::wstring &folder)
 {
 	if (Exists(folder))	//不处理最后一个字符是\的情况
@@ -193,7 +198,7 @@ bool File::MakeDir(const std::string &folder)
 
 bool File::RmDir(const std::wstring &folder)
 {
-	SHFILEOPSTRUCT sfos = {0};
+	SHFILEOPSTRUCTW sfos = {0};	//fixed while compile with ANSI failed, Jun. 10, 2011
 
 	std::wstring temp = folder;
 	temp.push_back(0);
