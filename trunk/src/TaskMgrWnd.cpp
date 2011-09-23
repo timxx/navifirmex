@@ -367,7 +367,7 @@ void TaskMgrWnd::OnNotify(int id, NMHDR *pnmh)
 
 			//Fiexed: Apr.23, 2011
 			if (_vDownloader.empty() ||
-				lpnmitem->iItem >= _vDownloader.size()
+				lpnmitem->iItem >= (int) _vDownloader.size()
 				)
 				return ;
 
@@ -456,6 +456,8 @@ void TaskMgrWnd::newTask(const FileInfo &fileInfo)
 
 	MiniDownloader *pmd = new MiniDownloader;
 
+	::SendMessage(getParent(), NM_SETPROXY, 0, (LPARAM)pmd);
+
 	if (!pmd->Init(false))
 	{
 		msgBox("NewTask_init", TEXT("初始化libcurl失败，无法进行下载！"), TEXT("出错了"), MB_ICONERROR);
@@ -505,6 +507,8 @@ void TaskMgrWnd::newTask(const TiFile &tiFile)
 		delete pmd;
 		return ;
 	}
+
+	::SendMessage(getParent(), NM_SETPROXY, 0, (LPARAM)pmd);
 
 	FileInfo fileInfo;
 

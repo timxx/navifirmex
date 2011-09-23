@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "DlgNewTask.h"
 #include "DlgConfig.h"
 #include "LangHelper.h"
+#include "DlgProxy.h"
 
 #pragma comment(lib, "shlwapi.lib")
 #pragma comment(lib, "Msimg32.lib")
@@ -403,7 +404,24 @@ LRESULT CALLBACK GUIWnd::runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			lstrcpy(path, _vLang[_curLangIndex]);
 		}
 		break;
-		
+
+	case NM_GETPROXYTYPE:
+		{
+			std::vector<TString> *pType = (std::vector<TString> *)lParam;
+			if (NULL != pType)
+			{
+				LangHelper lang;
+				if (PrepareLang(lang))
+					lang.GetProxyType(*pType);
+			}
+		}
+		break;
+
+	case NM_SETPROXY:
+		if (NULL != lParam)
+			setProxy(*((MiniDownloader*)lParam));
+		break;
+
 	default:
 		if (uMsg == WM_TASKBARBUTTONCREATED){
 			InitTaskBar();
@@ -593,6 +611,14 @@ void GUIWnd::OnCommand(int id, HWND hwndCtl, UINT uNotifyCode)
 			DlgConfig dlgCfg;
 			dlgCfg.init(getHinst(), getSelf());
 			dlgCfg.doModal(IDD_CONFIG, _pConfig);
+		}
+		break;
+
+	case IDM_PROXY:	// proxy
+		{
+			DlgProxy dlgProxy;
+			dlgProxy.init(getHinst(), getSelf());
+			dlgProxy.doModal(IDD_PROXY, _pConfig);
 		}
 		break;
 
@@ -1152,6 +1178,8 @@ DWORD WINAPI GUIWnd::GetProductListProc(LPVOID lParam)
 	DWORD dwSize = 0;
 	Http http;
 
+	pWnd->setProxy(http);
+
 	if (FileNeedUpdate(productFile, 10*1024))
 	{
 back:
@@ -1347,6 +1375,7 @@ DWORD WINAPI GUIWnd::GetReleaseListProc(LPVOID lParam)
 
 	DWORD dwSize = 0;
 	Http http;
+	pWnd->setProxy(http);
 
 	if (!FileExistsZip(rFile, productID))
 	{
@@ -1499,6 +1528,8 @@ DWORD WINAPI GUIWnd::GetVariantListProc(LPVOID lParam)
 	TString vFile = pWnd->MakeFilePath(TEXT("Cache\\796E0E5FF8114B13B2E23CDE9D3C6904"));
 
 	Http http;
+	pWnd->setProxy(http);
+	
 	char *data = NULL;
 	bool fNeedClear = false;
 	DWORD dwSize = 0;
@@ -2022,6 +2053,7 @@ void GUIWnd::DownloadImage(const TString &url, const TString &fileSave)
 	Http http;
 
 	http.Init(false, AGENT_NAME);
+	setProxy(http);
 	http.ShowProgress(WebProgress, this);
 #ifdef UNICODE
  	http.Get(wtoa(url));
@@ -2343,7 +2375,7 @@ DWORD WINAPI GUIWnd::GetFileListByCodeProc(LPVOID lParam)
 	DWORD dwSize = 0;
 
 	Http http;
-
+	pWnd->setProxy(http);
 	pWnd->KillTimer(UPDATE_TIMER_ID);
 	pWnd->ShowIndeterminateProgress();
 
@@ -2379,8 +2411,10 @@ TString GUIWnd::GetSessionID()
 	TString session;
 
 	Http http;
+
 	if (!http.Init(true, AGENT_NAME))
 		return session;
+	setProxy(http);
 
 	int index = 0;
 
@@ -3423,7 +3457,7 @@ void GUIWnd::InitLangMenu()
 	if (!hMenu)
 		return ;
 
-	hMenu = GetSubMenu(hMenu, 4);
+	hMenu = GetSubMenu(hMenu, 5);
 	if (!hMenu)
 		return ;
 
@@ -3645,4 +3679,22 @@ void GUIWnd::setChildrenFont(const HFONT &hFont)
 	_lvFile.setFont(hFont);
 
 	_btnDownload.setFont(hFont);
+}
+
+void GUIWnd::setProxy(Http &http)
+{
+	if (NULL == _pConfig)
+		return ;
+
+	Proxy proxy;
+	_pConfig->getProxy(proxy);
+#ifndef UNICODE
+	if (_pConfig->useProxy())
+		http.setProxy((Http::ProxyType)proxy.type, proxy.server.c_str(), proxy.port,
+		proxy.usr.c_str(), proxy.pwd.c_str());
+#else
+	if (_pConfig->useProxy())
+		http.setProxy((Http::ProxyType)proxy.type, wtoa(proxy.server).c_str(),
+		proxy.port, wtoa(proxy.usr).c_str(), wtoa(proxy.pwd).c_str());
+#endif
 }

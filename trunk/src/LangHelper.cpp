@@ -566,16 +566,56 @@ bool LangHelper::GetStatus(LPCSTR type, TString &text)
 	node = node->FirstChild();
 	if (node)
 	{
-		if (node)
+		const char *v = node->Value();
+		if (v)
 		{
-			const char *v = node->Value();
-			if (v)
-			{
-				text = v;
-				return true;
-			}
+			text = v;
+			return true;
 		}
 	}
 
 	return false;
+}
+
+bool LangHelper::GetProxyType(std::vector<TString> &type)
+{
+	if (_pXmlDoc == 0)
+		return false;
+
+	TiXmlNode *node = _pXmlDoc->FirstChild("Language");
+	if (NULL == node)
+		return false;
+
+	node = node->FirstChild("ProxyType");
+
+	if (NULL == node)
+		return false;
+
+	char *item_name[] = 
+	{
+		"NoProxy",
+		"Http",
+		"Sv4",
+		"Sv5"
+	};
+
+	for (int i=0; i<4; i++)
+	{
+		TiXmlNode *item = node->FirstChild(item_name[i]);
+
+		if (NULL == item) // all the proxy type string should have
+			return false;
+
+		item = item->FirstChild();
+		if (NULL == item)
+			return false;
+
+		const char *str = item->Value();
+		if (NULL == str)
+			return false;
+
+		type.push_back(str);
+	}
+
+	return true;
 }

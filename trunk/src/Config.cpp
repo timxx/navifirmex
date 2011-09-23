@@ -17,11 +17,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <tchar.h>
+#include <algorithm>
 
 #include "Config.h"
 #include "Tim/TString.h"
 
 using namespace Tim;
+
+// key for rc4
+#define RC4_KEY "NaviFirmEx_KEY"
+
+// rc4
+static char* rc4(const char *pszText, char *pszKey);
+static char* byte2hex(const unsigned char *pszText, int len);
+static unsigned char* hex2byte(const char *pszText);
+static inline char int2hex(int num);
+static inline int hex2int(char hex);
 
 Config::Config(const char *filePath)
 {
@@ -92,6 +103,11 @@ bool Config::load()
 		loadDownload(nodeDownload);
 	}
 
+	TiXmlNode *nodeProxy = node->FirstChild("Proxy");
+	if (nodeProxy){
+		loadProxy(nodeProxy);
+	}
+
 	//fixed....
 	//Mar. 11, 2011
 	if (_nIndex < 0 || _nIndex >= 3)
@@ -123,13 +139,18 @@ bool Config::save()
 		writeDownload(nodeDownload);
 	}
 
+	TiXmlNode *nodeProxy = mainNode->FirstChild("Proxy");
+	if (nodeProxy){
+		writeProxy(nodeProxy);
+	}
+
 	return _cfgDoc->SaveFile();
 }
 
 void Config::makeDefault()
 {
 	const char *cfg =
-		"<NaviFirmEx version=\"1.5\" lang = \"\">"
+		"<NaviFirmEx version=\"1.6\" lang = \"\">"
 			"<Window>"
 				"<MainGUI left=\"0\" top=\"0\" right=\"600\" bottom=\"480\" maxed=\"0\">"
 					"<Color begin = \"#BDB8ED\" end =\"#C0DACE\"/>"
@@ -150,6 +171,12 @@ void Config::makeDefault()
 				"</Prompt>"
 				"<TaskMgr show=\"1\"/>"
 			"</Download>"
+			"<Proxy type=\"0\">"
+				"<addr value = \"\"/>"
+				"<port value = \"\"/>"
+				"<usr value = \"\"/>"
+				"<pwd value = \"\"/>"
+			"</Proxy>"
 		"</NaviFirmEx>"
 		;
 
@@ -445,4 +472,202 @@ void Config::loadFont(TiXmlNode *node)
 		if (value)
 			_crFont = makeColor(value);
 	}
+}
+
+void Config::loadProxy(TiXmlNode *node)
+{
+	if (NULL == node)
+		return ;
+
+	const char *value = node->ToElement()->Attribute("type");
+	if (value)
+		_proxy.type = atoi(value);
+
+	TiXmlElement *item = node->FirstChildElement("addr");
+	if (item)
+	{
+		value = item->Attribute("value");
+		if (value)
+			_proxy.server = value;
+	}
+
+	item = node->FirstChildElement("port");
+	if (item)
+	{
+		value = item->Attribute("value");
+		if (value)
+			_proxy.port = atoi(value);
+	}
+
+	item = node->FirstChildElement("usr");
+	if (item)
+	{
+		value = item->Attribute("value");
+		if (value)
+			_proxy.usr = value;
+	}
+
+	item = node->FirstChildElement("pwd");
+	if (item)
+	{
+		value = item->Attribute("value");
+		if (value)
+		{
+			unsigned char *cipher = hex2byte(value);
+			if (NULL != cipher)
+			{
+				char *pwd = rc4((char*)cipher, RC4_KEY);
+				_proxy.pwd = pwd;
+
+				delete [] cipher;
+				delete [] pwd;
+			}
+		}
+	}
+}
+
+void Config::writeProxy(TiXmlNode *node)
+{
+	if (NULL == node)
+		return ;
+
+	node->ToElement()->SetAttribute("type", _proxy.type);
+
+	TiXmlElement *item = node->FirstChildElement("port");
+	if (item)
+		item->SetAttribute("value", _proxy.port);
+
+#ifdef UNICODE
+	item = node->FirstChildElement("addr");
+	if (item)
+		item->SetAttribute("value", wtoa(_proxy.server));
+
+	item = node->FirstChildElement("usr");
+	if (item)
+		item->SetAttribute("value", wtoa(_proxy.usr));
+
+	std::string pwd = wtoa(_proxy.pwd);
+	char *cipher = rc4(pwd.c_str(), RC4_KEY);
+	char *hex_pwd = byte2hex((unsigned char*)cipher, strlen(cipher));
+
+	item = node->FirstChildElement("pwd");
+	if (item)
+		item->SetAttribute("value", hex_pwd);
+#else
+	item = node->FirstChildElement("addr");
+	if (item)
+		item->SetAttribute("value", _proxy.server);
+
+	item = node->FirstChildElement("usr");
+	if (item)
+		item->SetAttribute("value", _proxy.usr);
+
+	char *cipher = rc4(_proxy.pwd, RC4_KEY);
+	char *hex_pwd = byte2hex(cipher, strlen(cipher));
+
+	item = node->FirstChildElement("pwd");
+	if (item)
+		item->SetAttribute("value", hex_pwd);
+#endif
+
+	delete [] cipher;
+	delete [] hex_pwd;
+}
+
+static char* rc4(const char *pszText, char *pszKey)
+{
+	int sbox[256];
+	int key[256];
+
+	int iLen = strlen(pszKey);
+
+	for (int i=0; i<256; i++)
+	{
+		key[i] = pszKey[i % iLen];
+		sbox[i] = i;
+	}
+
+	for (int i=0, j=0; i<256; i++)
+	{
+		j = (j + sbox[i] + key[i]) % 256;
+		std::swap(sbox[i], sbox[j]);
+	}
+
+	iLen = strlen(pszText);
+
+	char *cipher = new char[iLen + 1];
+	memset(cipher, 0, iLen + 1);
+	int j = 0, k = 0;
+
+	for (int i=0; i<iLen; i++)
+	{
+		j = (j + 1) % 256;
+		k = (k + sbox[j]) % 256;
+		std::swap(sbox[j], sbox[k]);
+		int m = sbox[(sbox[j] + sbox[k]) % 256];
+		cipher[i] = pszText[i] ^ m;
+	}
+
+	return cipher;
+}
+
+static char* byte2hex(const unsigned char *pszText, int len)
+{
+	if(NULL == pszText)
+		return NULL;
+
+	char *hex = new char[len * 2 + 1];
+	memset(hex, 0, len * 2 + 1);
+
+	for (int i=0; i<len; i++)
+	{
+		int digit = int(pszText[i]) / 16;
+		hex[i * 2] = int2hex(digit);
+		digit = int(pszText[i]) % 16;
+
+		hex[i * 2 + 1] = int2hex(digit);
+	}
+
+	return hex;
+}
+
+static unsigned char* hex2byte(const char *pszText)
+{
+	if(NULL == pszText)
+		return NULL;
+
+	int iLen = strlen(pszText);
+
+	if (iLen <= 0 || 0 != iLen % 2)
+		return NULL;
+
+	iLen /= 2;
+	unsigned char *bytes = new unsigned char[iLen + 1];
+	memset(bytes, 0, iLen + 1);
+
+	for (int i=0; i<iLen; i++)
+	{
+		int p1 = hex2int(pszText[i * 2]);
+		int p2 = hex2int(pszText[i * 2 + 1]);
+
+		bytes[i] = char(p1*16 + p2);
+	}
+
+	return bytes;
+}
+
+static inline char int2hex(int num)
+{
+	if (num > 9)
+		return 'A' + num - 10;
+
+	return num + '0';
+}
+
+static inline int hex2int(char hex)
+{
+	if (hex >= 'A')
+		return hex - 'A' + 10;
+
+	return hex - '0';
 }

@@ -11,7 +11,7 @@
 			
 			<SubEntries>
 				<item xPos = "1" yPos = "0" text = "&amp;Server"/>
-				<item xPos = "1" yPos = "4" text = "&amp;Language"/>
+				<item xPos = "1" yPos = "5" text = "&amp;Language"/>
 			</SubEntries>
 			
 			<Command>
@@ -29,6 +29,8 @@
 				
 				<item id = "40010" text = "&amp;Help" />
 				<item id = "40011" text = "&amp;About" />
+				
+				<item id = "40021" text = "Pro&amp;xy" />
 			</Command>
 		</Main>
 		<Popup>
@@ -136,6 +138,16 @@
 				<Info text = "Do you want to continue the unfinished task?"/>
 			</Task>
 		</Confirm>
+		
+		<Proxy title = "Proxy Configuration">
+			<item id = "1051" text ="Proxy Type: " />
+			<item id = "1053" text ="Server: " />
+			<item id = "1055" text ="Port: " />
+			<item id = "1057" text ="User Name: " />
+			<item id = "1059" text ="Password: " />
+			<item id = "1061" text ="OK" />
+			<item id = "1062" text ="Cancel" />
+		</Proxy>
 	</Dialog>
 	
 	<MsgBox>
@@ -202,4 +214,12 @@
 		<Connecting>Connecting to the server...</Connecting>
 		<GetSID>Trying to get SID...</GetSID>
 	</Status>
+	
+	<ProxyType>
+		<NoProxy>No Proxy</NoProxy>
+		<Http>HTTP Proxy</Http>
+		<Sv4>SOCKS v4 Proxy</Sv4>
+		<Sv5>SOCKS v5 Proxy</Sv5>
+	</ProxyType>
+	
 </Language>

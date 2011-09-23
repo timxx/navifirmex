@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Tim/Rect.h"
 #include "TinyXml/tinyxml.h"
+#include "data_type.h"
 
 using namespace Tim;
 
@@ -77,6 +78,11 @@ public:
 	void setFont(const LOGFONT &lf, COLORREF cr)	{	_lFont = lf;	_crFont = cr;	}
 	const LOGFONT& getFont() const					{	return _lFont;					}
 	COLORREF getFontColor() const					{	return _crFont;					}
+
+	void setProxy(const Proxy &proxy)	{	_proxy = proxy;	}
+	void getProxy(Proxy &proxy)	const	{	proxy = _proxy;	}
+
+	bool useProxy() const {	return _proxy.type > 0 && _proxy.type < 4; }
 protected:
 	void makeDefault();
 
@@ -94,6 +100,10 @@ protected:
 	void writeDownload(TiXmlNode *node);
 
 	void writeFont(TiXmlNode *node);
+
+	void loadProxy(TiXmlNode *node);
+	void writeProxy(TiXmlNode *node);
+
 private:
 	Rect	_rcGUI;
 	BOOL	_fGUIMaxed;
@@ -115,6 +125,8 @@ private:
 
 	LOGFONT		_lFont;
 	COLORREF	_crFont;
+
+	Proxy	_proxy;
 
 	std::string	_langFile;
 };
