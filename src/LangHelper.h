@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <Windows.h>
+#include <vector>
 #include "TinyXml\tinyxml.h"
 #include "Tim\TString.h"
 #include "GUIWnd.h"
@@ -48,6 +49,9 @@ public:
 	int MsgBox(const char *type, HWND hWnd, const TString &text, const TString &title, UINT uType);
 
 	bool GetStatus(LPCSTR type, TString &text);
+
+	bool GetProxyType(std::vector<TString> &type);
+
 protected:
 	void SetControlText(Tim::Window &control, const char *text);
 	void SetCommandMenu(TiXmlNode *nodeCmd, HMENU hMenu);

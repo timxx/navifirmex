@@ -43,7 +43,10 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE, LPTSTR lpCmdLine, int nCmdShow)
 		guiWnd.isCNSystem = false;
 
 	CreateMutex(NULL, FALSE, TEXT("NaviFirmEx_Mutex"));
-	if (GetLastError() == ERROR_ALREADY_EXISTS)
+
+	TString cmd = lpCmdLine;
+
+	if (cmd.find("--restart") == TString::npos && GetLastError() == ERROR_ALREADY_EXISTS)
 	{
 		int ans = IDYES;
 		if (guiWnd.isCNSystem)

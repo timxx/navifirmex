@@ -130,4 +130,22 @@ struct DownloadStatus
 	{}
 };
 
+struct Proxy
+{
+	// proxy type, value:0 ~ 3
+	// 0: not use
+	// 1: http
+	// 2: socks v4
+	// 3: socks v5
+	int				type;
+	Tim::TString	server;
+	int				port;
+	Tim::TString	usr;
+	Tim::TString	pwd;
+
+	Proxy()
+		:type(0), port(0)
+	{}
+};
+
 #endif	//__DATA_TYPE_H__

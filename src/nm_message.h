@@ -63,4 +63,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //lparam: TCHAR *
 #define NM_GETLANGPATH		WM_USER	+ 43
+
+// lparam: vector<TString> *
+#define NM_GETPROXYTYPE		WM_USER	+ 44
+
+// lparam: MiniDownloader *
+#define NM_SETPROXY			WM_USER + 45
 #endif

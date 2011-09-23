@@ -377,6 +377,7 @@
     <ClCompile Include="..\src\DlgCode.cpp" />
     <ClCompile Include="..\src\DlgConfirm.cpp" />
     <ClCompile Include="..\src\DlgNewTask.cpp" />
+    <ClCompile Include="..\src\DlgProxy.cpp" />
     <ClCompile Include="..\src\FontCtrl.cpp" />
     <ClCompile Include="..\src\GUIWnd.cpp" />
     <ClCompile Include="..\src\Http.cpp" />
@@ -412,6 +413,7 @@
     <ClInclude Include="..\src\DlgCode.h" />
     <ClInclude Include="..\src\DlgConfirm.h" />
     <ClInclude Include="..\src\DlgNewTask.h" />
+    <ClInclude Include="..\src\DlgProxy.h" />
     <ClInclude Include="..\src\FontCtrl.h" />
     <ClInclude Include="..\src\GUIWnd.h" />
     <ClInclude Include="..\src\Http.h" />

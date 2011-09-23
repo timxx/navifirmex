@@ -230,6 +230,8 @@ protected:
 	int msgBox(LPCSTR type, const TString &text, const TString &caption = TEXT("MessageBox"), UINT uType = MB_OK);
 
 	void setChildrenFont(const HFONT &hFont);
+
+	void setProxy(Http &http);
 private:
 	TaskMgrWnd * _taskMgr;
 	DlgNewTask * _newTaskDlg;

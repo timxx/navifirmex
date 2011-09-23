@@ -109,6 +109,10 @@ public:
 
 	void Replace(const TString &what, const TString &with);
 	//void Replace(const TCHAR &what, const TCHAR &with);
+
+	int toInt(){
+		return _ttoi(c_str());
+	}
 };
 
 _TIM_END

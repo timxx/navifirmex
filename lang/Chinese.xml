@@ -11,7 +11,7 @@
 			
 			<SubEntries>
 				<item xPos = "1" yPos = "0" text = "服务器(&amp;S)"/>
-				<item xPos = "1" yPos = "4" text = "语言(&amp;L)"/>
+				<item xPos = "1" yPos = "5" text = "语言(&amp;L)"/>
 			</SubEntries>
 			
 			<Command>
@@ -30,6 +30,8 @@
 				
 				<item id = "40010" text = "帮助(&amp;H)" />
 				<item id = "40011" text = "关于(&amp;A)" />
+				
+				<item id = "40021" text = "代理(&amp;X)" />
 			</Command>
 		</Main>
 		<Popup>
@@ -136,6 +138,16 @@
 				<Info text = "是否继续下载上次未完成任务？"/>
 			</Task>
 		</Confirm>
+		
+		<Proxy title = "代理设置">
+			<item id = "1051" text ="类　型：" />
+			<item id = "1053" text ="服务器：" />
+			<item id = "1055" text ="端　口：" />
+			<item id = "1057" text ="用户名：" />
+			<item id = "1059" text ="密　码：" />
+			<item id = "1061" text ="确定" />
+			<item id = "1062" text ="取消" />
+		</Proxy>
 	</Dialog>
 	
 	<MsgBox>
@@ -202,5 +214,12 @@
 		<Connecting>正在连接服务器。。。</Connecting>
 		<GetSID>尝试获取SID。。。</GetSID>
 	</Status>
+	
+	<ProxyType>
+		<NoProxy>不使用代理</NoProxy>
+		<Http>HTTP代理</Http>
+		<Sv4>SOCKS v4代理</Sv4>
+		<Sv5>SOCKS v5代理</Sv5>
+	</ProxyType>
 
 </Language>

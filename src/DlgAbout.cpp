@@ -104,7 +104,7 @@ void DlgAbout::OnInit()
 #endif
 	SetItemText(IDS_BUILT, buildTime);
 
-	buildTime = TEXT("NaviFirmEx v1.5.2 ");
+	buildTime = TEXT("NaviFirmEx v1.6.1 ");
 #ifdef UNICODE
 	buildTime += TEXT("(UNICODE)");
 #else

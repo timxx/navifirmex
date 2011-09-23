@@ -69,6 +69,11 @@ public:
 		_pUser = user_p;
 	}
 
+	enum ProxyType	{	pt_http=1, pt_sv4, pt_sv5	};
+
+	void setProxy(ProxyType type, const char *server, int port,
+		const char *usr = NULL, const char *pwd = NULL);
+
 protected:
 	static size_t write_func(void *ptr, size_t size, size_t nmemb, void *pHttp);
 	virtual size_t ProcessData(void *data, size_t size, size_t nmemb);

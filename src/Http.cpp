@@ -212,3 +212,21 @@ char* Http::GetData(LPDWORD pdwSize, int index/* = -1*/)
 
 	return NULL;
 }
+
+void Http::setProxy(ProxyType type, const char *server, int port,
+	const char *usr/* = NULL*/, const char *pwd/* = NULL*/)
+{
+	if (NULL == server)
+		return ;
+	curl_easy_setopt(_curl, CURLOPT_PROXY, server);
+	curl_easy_setopt(_curl, CURLOPT_PROXYPORT, port);
+
+	if (NULL != usr && NULL != pwd)
+	{
+		curl_easy_setopt(_curl, CURLOPT_PROXYUSERNAME, usr);
+		curl_easy_setopt(_curl, CURLOPT_PROXYPASSWORD, pwd);
+	}
+
+	int proxy[3] = { CURLPROXY_HTTP, CURLPROXY_SOCKS4, CURLPROXY_SOCKS5 };
+	curl_easy_setopt(_curl, CURLOPT_PROXYTYPE, proxy[type - 1]);
+}

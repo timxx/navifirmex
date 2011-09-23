@@ -78,8 +78,8 @@ void DlgConfig::OnInit()
 	_crFont = _pConfig->getFontColor();
 	_lFont = _pConfig->getFont();
 
-	_lkFont.assign(HwndFromId(IDS_FONT), _hWnd);
 	_lkFont.setFont(_pConfig->getFont(), _pConfig->getFontColor());
+	_lkFont.assign(HwndFromId(IDS_FONT), _hWnd);
 }
 
 void DlgConfig::OnCommand(int id)
