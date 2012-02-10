@@ -199,8 +199,13 @@ TString MakeFileSizeFmt(DWORD dwSize)
 	}
 	else if (size >= 1024 *1024 && size < 1024 * 1024 *1024)//MB
 	{
-		size /= 1024 *1024;
+		size /= 1024 * 1024;
 		lstrcpy(szUnit, TEXT("MB"));
+	}
+	else if (size >= 1024 * 1024 * 1024)	// GB
+	{
+		size /= 1024 * 1024 * 1024;
+		lstrcpy(szUnit, TEXT("GB"));
 	}
 
 	TString sizeFmt;
