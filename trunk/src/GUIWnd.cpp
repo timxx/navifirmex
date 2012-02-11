@@ -221,6 +221,16 @@ LRESULT CALLBACK GUIWnd::runProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		}
 		break;
 
+	case WM_ENDSESSION:
+		{
+			if ((BOOL)wParam == FALSE)
+				break;
+
+			if (_taskMgr && _taskMgr->hasTask())
+				::SendMessage(_taskMgr->getSelf(), NM_ABOUTCLOSE, 0, 0);
+		}
+		break;
+
 	case NM_CODEDOWNLOAD:
 		{
 			TCHAR *code = (TCHAR*)lParam;
